@@ -60,6 +60,7 @@ var config = {
     database: 'SAEEdb',
     stream: true,
     port:1433,
+    multipleStatements:true,
     options: {
       encrypt: false
     }// Use this if you're on Windows Azure
@@ -301,18 +302,18 @@ app.put('/spresponce/:emp_id' ,(req, res,emp_id) => {
 
 });
 
-app.put('/spresponce' ,(req, res,emp_id) => {
-    var emp_id = req.params.emp_id; 
-    var req = new sql.Request(conn);
-        // query to the database and get the records
+app.post('/spresponce' ,(req, res,emp_id) => {
     
-        req.query("EXEC [dbo].[SP_RESPONSE]  (@emp_id ='"+req.body.emp_id+"' , @survey_id = '"+req.body.survey_id+"',@question_no = "+req.body.question_no+",@attempts = "+req.body.attempts+",@answer = '"+req.body.answer+"',@points = "+req.body.points+")", function (err, data, fields) {
+    var req = new sql.Request();
+        // query to the database and get the records
+    var sql="SET @emp_id=?;SET @survey_id=?;SET @question_no=?;SET @attempts=?;SET @answer=?;SET @points=?; CALL SP_RESPONSE (@emp_id, @survey_id,@question_no,@attempts, @answer,  @points); "
+        req.query(sql,[emp_id, survey_id,question_no,attempts, answer,  points], function (err, rows, fields) {
             
             if (err) console.log(err);
 
             // send records as a response
         
-            res.send(data);
+            res.send(rows);
 
     });
 
