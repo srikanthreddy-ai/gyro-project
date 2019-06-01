@@ -67,7 +67,7 @@ var config = {
 
 console.log(config.server);
 
-sql.connect(config, function(err) {
+var conn=sql.connect(config, function(err) {
     // ... error checks
     var req = new sql.Request();
     req.stream = true; // You can set streaming differently for each request
@@ -100,7 +100,7 @@ createRoutes(app, config);
 
 app.get('/questionsforuser' ,(req, res, next) => {
 
-    var req = new sql.Request();
+    var req = new sql.Request(conn);
            
         // query to the database and get the records
         req.query('EXEC [dbo].[SP_GETQUSTIONSFORUSER] ', function (err, recordset,rowCount) {
@@ -117,7 +117,7 @@ app.get('/questionsforuser' ,(req, res, next) => {
 });
 app.get('/questionare' ,(req, res, next) => {
 
-    var req = new sql.Request();
+    var req = new sql.Request(conn);
            
         // query to the database and get the records
         req.query('EXEC [dbo].[SP_QUSTIONARE_OLD] ', function (err, recordset,rowCount) {
@@ -267,18 +267,18 @@ app.post('/responce' ,(req, res, next) => {
 
 });
 
-app.put('/responce/:id' ,(req, res,id) => {
-    var id = req.params.id; 
-    var req = new sql.Request();
+app.put('/spresponce' ,(req, res,emp_id) => {
+    var emp_id = req.params.emp_id; 
+    var req = new sql.Request(conn);
         // query to the database and get the records
     
-        req.query("UPDATE TBL_RESPONSE SET  WHERE emp_id ="+[req.body, 'id'], function (err, rows, rowCount, fields) {
+        req.query("EXEC [dbo].[SP_RESPONSE]  (@emp_id ='"+req.body.emp_id+"' , @survey_id = '"+req.body.survey_id+"',@question_no = "+req.body.question_no+",@attempts = "+req.body.attempts+",@answer = '"+req.body.answer+"',@points = "+req.body.points+")", function (err, data, fields) {
             
             if (err) console.log(err);
 
             // send records as a response
-            console.log(rowCount + ' row(s) returned');
-            res.send(rows);
+        
+            res.send(data);
 
     });
 
