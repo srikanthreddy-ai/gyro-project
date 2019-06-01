@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  toxiproxy:
+    image: shopify/toxiproxy
+    ports:
+      - "8474:8474"
+      - "21433:21433"
+    links:
+      - "mssql"
+
+  mssql:
+    image: microsoft/mssql-server-linux:2017-latest
+    ports:
+      - "31433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=S0meVeryHardPassword
