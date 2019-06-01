@@ -150,6 +150,23 @@ app.get('/surveyuser' ,(req, res, next) => {
 
 });
 
+app.put('/surveyuser/emp_id' ,(req, res, next) => {
+
+    var req = new sql.Request();
+           
+        // query to the database and get the records
+        req.query("EXEC [dbo].[SP_RESPONSE]  ( @survey_id = '"+req.body.survey_id+"',@emp_id ='"+req.body.emp_id+"' ,@quest_attempted = "+req.body.quest_attempted+",@no_questions_ans = "+req.body.no_questions_ans+" )", function (err, recordset,rowCount) {
+            
+            if (err) console.log(err)
+
+            // send records as a response
+            console.log(rowCount + ' row(s) returned');
+            res.send(recordset);
+     
+
+    });
+
+});
 
 
 
@@ -262,6 +279,23 @@ app.post('/responce' ,(req, res, next) => {
             console.log(rowCount + ' row(s) returned');
             res.send(JSON.stringify(data));
             }
+
+    });
+
+});
+
+app.put('/spresponce/:emp_id' ,(req, res,emp_id) => {
+    var emp_id = req.params.emp_id; 
+    var req = new sql.Request(conn);
+        // query to the database and get the records
+    
+        req.query("EXEC [dbo].[SP_RESPONSE]  (@emp_id ='"+req.body.emp_id+"' , @survey_id = '"+req.body.survey_id+"',@question_no = "+req.body.question_no+",@attempts = "+req.body.attempts+",@answer = '"+req.body.answer+"',@points = "+req.body.points+")", function (err, data, fields) {
+            
+            if (err) console.log(err);
+
+            // send records as a response
+        
+            res.send(data);
 
     });
 
