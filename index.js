@@ -108,6 +108,7 @@ app.get('/questionsforuser' ,(req, res, next) => {
 
     });
 });
+
 app.get('/questionare' ,(req, res, next) => {
 
     var req = new sql.Request(conn);
@@ -130,7 +131,7 @@ app.get('/surveyuser' ,(req, res, next) => {
     var req = new sql.Request();
            
         // query to the database and get the records
-        req.query(' select * from TBL_SURVEY_USERS', function (err, results) {
+        req.query(' select * from TBL_SURVEY_USERS where status=1', function (err, results) {
             
             if (err) console.log(err)
 
@@ -143,7 +144,27 @@ app.get('/surveyuser' ,(req, res, next) => {
 
 });
 
-app.put('/surveyuser' ,(req, res, next) => {
+app.get('/surveyuser/:survey_id' ,(req, res, next) => {
+    var survey_id = (req.params.survey_id); 
+    var req = new sql.Request();
+           
+        // query to the database and get the records
+        req.query(' select * from TBL_SURVEY_USERS where survey_id='+["survey_id"], function (err, results) {
+            
+            if (err) console.log(err)
+
+            // send records as a response
+            
+            res.send(JSON.stringify(results.recordset[0]));
+     
+
+    });
+
+});
+
+
+
+app.post('/surveyuser' ,(req, res, next) => {
 
     var req = new sql.Request();
            
@@ -186,18 +207,34 @@ app.get('/surveyhistory' ,(req, res, next) => {
 
 
 
+app.get('/user' ,(req, res) => {
+    var emp_id = (req.params.emp_id); 
+    var req = new sql.Request();
+        // query to the database and get the records
+    
+        req.query('SELECT * FROM TBL_USER', function (err,results) {
+            if (err) console.log(err),
+            console.log(emp_id);
+
+            // send records as a response
+            res.send(results.recordset);
+     
+
+    });
+
+});
 
 app.get('/user/:emp_id' ,(req, res) => {
     var emp_id = (req.params.emp_id); 
     var req = new sql.Request();
         // query to the database and get the records
     
-        req.query('SELECT * FROM TBL_USER WHERE emp_id ='+["emp_id"], function (err, row, fields, rowCount) {
+        req.query('SELECT * FROM TBL_USER WHERE emp_id ='+["emp_id"], function (err, results) {
             if (err) console.log(err),
             console.log(emp_id);
 
             // send records as a response
-            res.send(row);
+            res.send(results.recordset[0]);
      
 
     });
@@ -221,21 +258,7 @@ app.get('/question/:question_no' ,(req, res, question_no) => {
     });
 
 });
-app.get('/userplant/:id' ,(req, res, id) => {
-    var id = req.params.id; 
-    var req = new sql.Request();
-        // query to the database and get the records
-    
-        req.query('SELECT * FROM TBL_USER WHERE plant_id ='+[id], function (err, row, fields) {
-            if (err) console.log(err)
 
-            // send records as a response
-            res.send(row);
-     
-
-    });
-
-});
 
 app.post('/surveyuser/update' ,(req, res, parameters) => {
 
@@ -260,7 +283,7 @@ app.post('/responce' ,(req, res, next) => {
     var req = new sql.Request();
         // query to the database and get the records
     
-        req.query("INSERT INTO [TBL_RESPONSE] (emp_id, survey_id, question_no, attempts, answer, points) VALUES ('"+req.body.emp_id+"' , '"+req.body.survey_id+"', "+req.body.question_no+", "+req.body.attempts+", '"+req.body.answer+"', "+req.body.ponts+")", function (err, recordset, rowCount, fields) {
+        req.query("INSERT INTO [TBL_RESPONSE] (emp_id, survey_id, question_no, attempts, answer, points) VALUES ('"+req.body.emp_id+"' , '"+req.body.survey_id+"', "+req.body.question_no+", "+req.body.attempts+", '"+req.body.answer+"', "+req.body.ponts+")", function (err, results) {
            
             if (err) {
                 console.log(req.body);
@@ -272,7 +295,7 @@ app.post('/responce' ,(req, res, next) => {
             else{// send records as a response
             console.log(req.body);
             console.log(rowCount + ' row(s) returned');
-            res.send(JSON.stringify(recordset));
+            res.send(JSON.stringify(results.recordset[0]));
             }
 
     });
