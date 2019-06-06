@@ -16,7 +16,10 @@ var createRoutes = require('restful-stored-procedure');
 var Connection = require('tedious').Connection;
 var morgan=require('morgan');
 var async = require('async');
-
+var session = require('express-session');
+var redisStore = require('connect-redis')(session);
+const responseTime = require('response-time')
+var schedule = require('node-schedule');
 /*var mysqlConnection=mysql.createConnection({
     host:'localhost',
     user:'root',
@@ -31,7 +34,7 @@ mysqlConnection.connect((err)=>{
 
 });*/
 app.use(morgan('dev'));
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser. json());
 
 /*app.use(function(req, res, next) {
@@ -39,10 +42,17 @@ app.use(bodyParser. json());
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
   });*/
-  app.engine('handlebars', exphbs({defaultLayout:'main'}));
+  app.engine('handlebars', exphbs({defaultLayout:'index'}));
   app.set('view engine', 'handlebars');
 server.listen(3000, ()=>console.log("server running port at :"+port));
 
+app.use(session({
+    secret: 'ssshhhhh',
+    store: new redisStore({ host: 'localhost', port: 6379, clientRedis: clientRedis,ttl :  260}),
+    saveUninitialized: false,
+    resave: false
+}));
+app.use(responseTime());
 /*
 const config = {
     user: 'SAEEsa',
@@ -61,40 +71,24 @@ var config = {
     stream: true,
     port:1433,
     multipleStatements:true,
-    options: {
+    options: {     
+     auto_reconnect: true,
       encrypt: false
     }// Use this if you're on Windows Azure
 }
 
-console.log(config.server);
+
 
 var conn=sql.connect(config, function(err) {
+    if (err) console.log(err);
     // ... error checks
-    var req = new sql.Request();
-    req.stream = true; // You can set streaming differently for each request
+    console.log(config.server);// You can set streaming differently for each request
     //req.query('select * from TBL_USER'); // or request.execute(procedure);
 
-    req.on('recordset', function(columns) {
-        // Emitted once for each recordset in a query
-        console.log(columns);
-    });
-
-    req.on('row', function(row) {
-        // Emitted for each row in a recordset
-        console.log(row);
-    });
-
-    req.on('error', function(err) {
-        // May be emitted multiple times
-        console.log(err);
-    });
-
-    req.on('done', function(returnValue) {
-        // Always emitted as the last one
-        console.log(returnValue);
-    });
 
 });
+
+
 
 createRoutes(app, config);
 
@@ -104,30 +98,28 @@ app.get('/questionsforuser' ,(req, res, next) => {
     var req = new sql.Request(conn);
            
         // query to the database and get the records
-        req.query('EXEC [dbo].[SP_GETQUSTIONSFORUSER] ', function (err, recordset,rowCount) {
+        req.query('EXEC [dbo].[SP_GETQUSTIONSFORUSER]', function (err, results) {
             
             if (err) console.log(err)
 
             // send records as a response
-            console.log(rowCount + ' row(s) returned');
-            res.send(recordset);
+            res.end(JSON.stringify(results.recordset));
      
 
     });
-
 });
 app.get('/questionare' ,(req, res, next) => {
 
     var req = new sql.Request(conn);
            
         // query to the database and get the records
-        req.query('EXEC [dbo].[SP_QUSTIONARE_OLD] ', function (err, recordset,rowCount) {
+        req.query('EXEC [dbo].[SP_QUSTIONARE_OLD]', function (err, results) {
             
             if (err) console.log(err)
 
             // send records as a response
-            console.log(rowCount + ' row(s) returned');
-            res.send(recordset);
+            //console.log(JSON.stringify(results.recordset));
+            res.send(JSON.stringify(results.recordset));
      
 
     });
@@ -138,20 +130,20 @@ app.get('/surveyuser' ,(req, res, next) => {
     var req = new sql.Request();
            
         // query to the database and get the records
-        req.query('EXEC [dbo].[SP_GETSURVEYUSER] ', function (err, recordset,rowCount) {
+        req.query(' select * from TBL_SURVEY_USERS', function (err, results) {
             
             if (err) console.log(err)
 
             // send records as a response
-            console.log(rowCount + ' row(s) returned');
-            res.send(recordset);
+            
+            res.end(JSON.stringify(results.recordset));
      
 
     });
 
 });
 
-app.put('/surveyuser/emp_id' ,(req, res, next) => {
+app.put('/surveyuser' ,(req, res, next) => {
 
     var req = new sql.Request();
            
@@ -188,6 +180,9 @@ app.get('/surveyhistory' ,(req, res, next) => {
     });
 
 });
+
+
+
 
 
 
@@ -235,8 +230,7 @@ app.get('/userplant/:id' ,(req, res, id) => {
             if (err) console.log(err)
 
             // send records as a response
-            res.send(row),
-            console.log('Deleted successfully'+row);
+            res.send(row);
      
 
     });
@@ -266,7 +260,7 @@ app.post('/responce' ,(req, res, next) => {
     var req = new sql.Request();
         // query to the database and get the records
     
-        req.query("INSERT INTO [TBL_RESPONSE] (emp_id, survey_id, question_no, attempts, answer, points) VALUES ('"+req.body.emp_id+"' , '"+req.body.survey_id+"', "+req.body.question_no+", "+req.body.attempts+", '"+req.body.answer+"', "+req.body.ponts+")", function (err, data, rowCount, fields) {
+        req.query("INSERT INTO [TBL_RESPONSE] (emp_id, survey_id, question_no, attempts, answer, points) VALUES ('"+req.body.emp_id+"' , '"+req.body.survey_id+"', "+req.body.question_no+", "+req.body.attempts+", '"+req.body.answer+"', "+req.body.ponts+")", function (err, recordset, rowCount, fields) {
            
             if (err) {
                 console.log(req.body);
@@ -278,7 +272,7 @@ app.post('/responce' ,(req, res, next) => {
             else{// send records as a response
             console.log(req.body);
             console.log(rowCount + ' row(s) returned');
-            res.send(JSON.stringify(data));
+            res.send(JSON.stringify(recordset));
             }
 
     });
@@ -302,12 +296,12 @@ app.put('/spresponce/:emp_id' ,(req, res,emp_id) => {
 
 });
 
-app.post('/spresponce' ,(req, res,emp_id) => {
+app.post('/spresponce' ,(req, res) => {
     
-    var req = new sql.Request();
+   
         // query to the database and get the records
     var sql="SET @emp_id=?;SET @survey_id=?;SET @question_no=?;SET @attempts=?;SET @answer=?;SET @points=?; CALL SP_RESPONSE (@emp_id, @survey_id,@question_no,@attempts, @answer,  @points); "
-        req.query(sql,[emp_id, survey_id,question_no,attempts, answer,  points], function (err, rows, fields) {
+        req.query(sql,[emp_id,survey_id,question_no,attempts, answer,  points], function (err, rows, fields) {
             
             if (err) console.log(err);
 
@@ -344,4 +338,45 @@ catch(err){
 }
 
 
-    
+let startTime = new Date(Date.now());
+let endTime = new Date(startTime.getTime() + 5000);
+var rule = new schedule.RecurrenceRule();
+rule.dayOfWeek = [0, new schedule.Range(4, 6)];
+rule.hour = 17;
+rule.minute = 0;
+//{ start: startTime, end: endTime, rule: '*/1 * * * * *' }
+var j = schedule.scheduleJob('0 13 * * *', function(){
+  console.log('Morning JOb started');
+  var req = new sql.Request(conn);
+           
+        // query to the database and get the records
+        req.query('EXEC [dbo].[SP_QUSTIONARE_OLD] ', function (res, err, recordset,rowCount) {
+            
+            if (err) console.log(err)
+
+            // send records as a response
+            console.log(rowCount + ' row(s) returned');
+           
+     
+
+    });
+});
+
+var j = schedule.scheduleJob('0 14 * * *', function(){
+    console.log('Morning JOb stop');
+    var req = new sql.Request(conn);
+             
+          // query to the database and get the records
+          req.query('EXEC [dbo].[SP_QUSTIONARE_OLD] ', function (res, err, recordset,rowCount) {
+              
+              if (err) console.log(err)
+  
+              // send records as a response
+              console.log(rowCount + ' row(s) returned');
+             
+       
+  
+      });
+  });
+
+    module.exports=app;
