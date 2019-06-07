@@ -34,7 +34,7 @@ mysqlConnection.connect((err)=>{
 
 });*/
 app.use(morgan('dev'));
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser. json());
 
 /*app.use(function(req, res, next) {
@@ -42,6 +42,14 @@ app.use(bodyParser. json());
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
   });*/
+
+  app.use(function (req, res, next) {
+    //Enabling CORS 
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, contentType,Content-Type, Accept, Authorization");
+    next();
+});
   app.engine('handlebars', exphbs({defaultLayout:'index'}));
   app.set('view engine', 'handlebars');
 server.listen(3000, ()=>console.log("server running port at :"+port));
@@ -71,6 +79,7 @@ var config = {
     stream: true,
     port:1433,
     multipleStatements:true,
+    parseJSON:true,
     options: {     
      auto_reconnect: true,
       encrypt: false
@@ -93,17 +102,107 @@ var conn=sql.connect(config, function(err) {
 createRoutes(app, config);
 
 
+app.get('/user' ,(req, res) => {
+   
+    var req = new sql.Request();
+        // query to the database and get the records
+    
+        req.execute('SP_GETUSERINFO', function (err,results) {
+            if (err) console.log(err),
+            console.log(emp_id);
+
+            // send records as a response
+            res.send(JSON.stringify(results.recordset));
+            
+    });
+
+});
+
+let redisMiddleware = (req, res, next) => {
+    let key = "__expIress__" + req.originalUrl || req.url;
+    clientRedis.get(key, function(err, reply){
+      if(reply){
+          res.send(reply);
+      }else{
+          res.sendResponse = res.send;
+          res.send = (body) => {
+            clientRedis.set(key, body);
+              res.sendResponse(body);
+          }
+          next();
+      }
+    });
+  };
+  app.get("/products", redisMiddleware, function(req, res) {
+    res.send(res);
+  });
+app.get('/user/:id' ,(req, res,id) => {
+    var id = (req.params.id); 
+    var req = new sql.Request();
+        // query to the database and get the records
+    req.input('id', sql.nvarchar)
+        req.query('SELECT * FROM TBL_USER WHERE emp_id ='+[id], function (err, rows) {
+            if (err) console.log(err),
+            console.log(rows);
+
+            // send records as a response
+            console.log(id),
+           res.send(JSON.stringify(rows));
+         
+    });
+
+});
+
+
+
+app.get('/surveyuser' ,(req, res, next) => {
+
+    var req = new sql.Request();
+           
+        // query to the database and get the records
+        req.execute('SP_GETSURVEYUSER', function (err, results) {
+            
+            if (err) console.log(err)
+
+            // send records as a response
+            
+            res.end(JSON.stringify(results.recordset));
+     
+
+    });
+
+});
+
+app.get('/surveyuser/:survey_id' ,(req, res, next) => {
+    var survey_id = (req.params.survey_id); 
+    var emp_id = (req.params.emp_id); 
+    var req = new sql.Request();
+           
+        // query to the database and get the records
+        req.query(' select * from TBL_SURVEY_USERS where survey_id='+["survey_id"], function (err, results) {
+            
+            if (err) console.log(err)
+
+            // send records as a response
+            
+            res.send(JSON.stringify(results.recordset));
+     
+
+    });
+
+});
+
 app.get('/questionsforuser' ,(req, res, next) => {
 
     var req = new sql.Request(conn);
            
         // query to the database and get the records
-        req.query('EXEC [dbo].[SP_GETQUSTIONSFORUSER]', function (err, results) {
+        req.execute('[SP_GETQUSTIONSFORUSER]', function (err, results) {
             
             if (err) console.log(err)
 
             // send records as a response
-            res.end(JSON.stringify(results.recordset));
+            res.send(JSON.stringify(results.recordset));
      
 
     });
@@ -126,41 +225,7 @@ app.get('/questionare' ,(req, res, next) => {
     });
 
 });
-app.get('/surveyuser' ,(req, res, next) => {
 
-    var req = new sql.Request();
-           
-        // query to the database and get the records
-        req.query(' select * from TBL_SURVEY_USERS where status=1', function (err, results) {
-            
-            if (err) console.log(err)
-
-            // send records as a response
-            
-            res.end(JSON.stringify(results.recordset));
-     
-
-    });
-
-});
-
-app.get('/surveyuser/:survey_id' ,(req, res, next) => {
-    var survey_id = (req.params.survey_id); 
-    var req = new sql.Request();
-           
-        // query to the database and get the records
-        req.query(' select * from TBL_SURVEY_USERS where survey_id='+["survey_id"], function (err, results) {
-            
-            if (err) console.log(err)
-
-            // send records as a response
-            
-            res.send(JSON.stringify(results.recordset[0]));
-     
-
-    });
-
-});
 
 
 
@@ -207,29 +272,66 @@ app.get('/surveyhistory' ,(req, res, next) => {
 
 
 
-app.get('/user' ,(req, res) => {
-    var emp_id = (req.params.emp_id); 
+
+
+app.get('/user/post' ,(req, res,id) => {
+    var id = (req.body.logon_name); 
+    var lan = (req.body.lang_pref); 
+   var req = new sql.Request();
+        // query to the database and get the records
+    //req.input('id', sql.nvarchar, value)
+    //var sql="SET @logon_name=?;SET @lang_pref=?; CALL SP_UPDATEUSERLANGUAGE @logon_name, @lang_pref"
+    //console.log(sql);
+        var q=req.query("EXEC SP_UPDATEUSERLANGUAGE id,lan", function (err, rows) {
+            
+            if (err) {
+                
+            console.log(err)
+            }
+            
+            console.log(q),
+            console.log(id),
+            console.log(lan);
+
+            // send records as a response
+          return  res.send(JSON.stringify(rows));
+         
+    });
+
+});
+/*
+async () => {
+    try {
+        await sql.connect(config)
+        const result = await sql.query`SELECT * FROM TBL_CERTIFICATE`
+        console.dir(result)
+    } catch (err) {
+        // ... error checks
+        console.log(err);
+    }
+}
+*/
+app.get('/certificate' ,(req, res,emp_id) => {
+   
     var req = new sql.Request();
         // query to the database and get the records
     
-        req.query('SELECT * FROM TBL_USER', function (err,results) {
+        req.query('SELECT * FROM TBL_CERTIFICATE', function (err, results) {
             if (err) console.log(err),
-            console.log(emp_id);
+            console.log(results);
 
             // send records as a response
-            res.send(results.recordset);
-     
-
+            res.send(JSON.stringify(results.recordset));
     });
 
 });
 
-app.get('/user/:emp_id' ,(req, res) => {
+app.get('/feedback/:emp_id' ,(req, res) => {
     var emp_id = (req.params.emp_id); 
     var req = new sql.Request();
         // query to the database and get the records
     
-        req.query('SELECT * FROM TBL_USER WHERE emp_id ='+["emp_id"], function (err, results) {
+        req.query('select * from TBL_FEEDBACK WHERE emp_id ='+["emp_id"], function (err, results) {
             if (err) console.log(err),
             console.log(emp_id);
 
@@ -294,8 +396,8 @@ app.post('/responce' ,(req, res, next) => {
 
             else{// send records as a response
             console.log(req.body);
-            console.log(rowCount + ' row(s) returned');
-            res.send(JSON.stringify(results.recordset[0]));
+           
+            res.send(JSON.stringify(req.body.recordset[0]));
             }
 
     });
@@ -344,7 +446,7 @@ try{
     clientRedis.on('connect', function(err) {
         if(err){
             console.log(err);
-            nhhs_logger.error(err,"Redis connection error");
+           
         }
         console.log('Redis connected');
        
@@ -368,38 +470,53 @@ rule.dayOfWeek = [0, new schedule.Range(4, 6)];
 rule.hour = 17;
 rule.minute = 0;
 //{ start: startTime, end: endTime, rule: '*/1 * * * * *' }
-var j = schedule.scheduleJob('0 13 * * *', function(){
-  console.log('Morning JOb started');
+var i = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/1 * * * * *' }, function(){
   var req = new sql.Request(conn);
            
         // query to the database and get the records
-        req.query('EXEC [dbo].[SP_QUSTIONARE_OLD] ', function (res, err, recordset,rowCount) {
+        req.execute('EXEC [dbo].[SP_GETQUSTIONSFORUSER] ', function (res, err, recordset,rowCount) {
             
             if (err) console.log(err)
 
             // send records as a response
-            console.log(rowCount + ' row(s) returned');
-           
+            console.log('Questionsforuser caching created');
      
 
     });
 });
 
-var j = schedule.scheduleJob('0 14 * * *', function(){
-    console.log('Morning JOb stop');
+var j = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/1 * * * * *' }, function(){
+   
     var req = new sql.Request(conn);
              
           // query to the database and get the records
-          req.query('EXEC [dbo].[SP_QUSTIONARE_OLD] ', function (res, err, recordset,rowCount) {
+          req.execute('SP_GETSURVEYUSER', function (res, err, recordset) {
               
               if (err) console.log(err)
   
               // send records as a response
-              console.log(rowCount + ' row(s) returned');
              
-       
+              console.log('Survey caching created');
   
       });
   });
+
+  var k = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/1 * * * * *' }, function(){
+   
+    var req = new sql.Request(conn);
+             
+          // query to the database and get the records
+          req.execute('SP_GETUSERINFO', function (res, err, recordset) {
+              
+              if (err) console.log(err)
+  
+              // send records as a response
+             
+              console.log('userinfo caching created');
+  
+      });
+  });
+
+ 
 
     module.exports=app;
