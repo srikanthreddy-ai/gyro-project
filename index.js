@@ -112,14 +112,45 @@ app.get('/user' ,(req, res) => {
             console.log(emp_id);
 
             // send records as a response
+            console.time()
             res.send(JSON.stringify(results.recordset));
             
     });
 
 });
+    app.get('/ping', function(req,res){
+
+        res.json({PONG:Date.now()});
+    });
 
 let redisMiddleware = (req, res, next) => {
-    let key = "__expIress__" + req.originalUrl || req.url;
+   
+    //let key = "userinfo" + req.originalUrl || req.url;
+    let key = "userinfo";
+    clientRedis.get(key, function(err, reply){
+      if(reply){
+          res.send(reply);
+         
+          console.log("Logging from data cache"); 
+          console.log(reply);
+      }else{
+          // call the func that executes the stored proce
+          // response of stored proce you should set to cahe
+          // Return the same value
+          res.sendResponse = res.send;
+          res.send = (body) => {
+            clientRedis.set(key, body);
+              res.sendResponse(body);
+             
+              //console.log(body);
+          }
+          next();
+      }
+    });
+  };
+
+  let redisMiddleware1 = (req, res, next) => {
+    let key = "surveyuser" + req.originalUrl || req.url;
     clientRedis.get(key, function(err, reply){
       if(reply){
           res.send(reply);
@@ -133,9 +164,166 @@ let redisMiddleware = (req, res, next) => {
       }
     });
   };
-  app.get("/products", redisMiddleware, function(req, res) {
-    res.send(res);
+
+  let redisMiddleware2 = (req, res, data,next) => {
+   //let key = "questionforuser1" + req.originalUrl || req.url;
+          res.sendResponse = res.send;
+          res.send = (body) => {
+            // Loop for each record here
+            for (var i = 0, len = data.length; i < len; i++) {
+                //someFn(data[i]);
+                // declare a variable 
+                // set emp id to that 
+                // do while loop until emp id == data .empid
+                res.send(data[i]);
+
+                var id=emp_id;
+                do {
+                   id=id[i];
+                   // each question add to
+                   var emp_id=[];
+                   emp_id.push(id[i]);
+                   console.log("emp question inserting intp array");
+                  } while (id==data.emp_id);
+              // 
+            ///clientRedis.set(key, data);
+            clientRedis.set(id, emp_id);
+            
+            res.send(emp_id);
+            emp_id=[];
+           //   res.sendResponse(body);
+
+          }
+          next();
+  };
+};
+
+  var emp_id=[];
+  let createkeys=(req, res,next)=>{
+      for(let i=0 ;i<=emp_id.length; i++){
+
+        let key='keys'+i;
+        clientRedis.get(key, function(err, reply){
+            if(reply){
+                res.send(reply);
+            }else{
+                res.sendResponse = res.send;
+                res.send = (body) => {
+                  clientRedis.set(key, body);
+                    res.sendResponse(body);
+                }
+                next();
+            }
+          });
+      }
+      
+  }
+
+  app.get("/userinfo", redisMiddleware, function(req, res) {
+    var req = new sql.Request();
+    // query to the database and get the records
+
+    req.execute('SP_GETUSERINFO', function (err,results) {
+        if (err) console.log(err),
+        console.log(emp_id);
+
+        // send records as a response
+        console.time()
+        res.send(JSON.stringify(results.recordset));
+        
+        
+     });
   });
+
+
+  app.get("/surveyuser1", redisMiddleware1, function(req, res) {
+    var req = new sql.Request();
+    // query to the database and get the records
+
+    req.execute('SP_GETSURVEYUSER', function (err,results) {
+        if (err) console.log(err),
+        console.log(emp_id);
+
+        // send records as a response
+        console.time()
+        res.send(JSON.stringify(results.recordset));
+        
+     });
+  });
+
+
+
+  app.get("/getquestionforuser1", redisMiddleware2, function(req, res) {
+    var req = new sql.Request();
+    // query to the database and get the records
+
+    req.execute('SP_GETQUSTIONSFORUSER', function (err,results) {
+        if (err) console.log(err),
+        console.log(emp_id);
+
+        //Loop through data here
+
+
+        // send records as a response
+        console.time()
+        res.send(JSON.stringify(results.recordset));
+        //res.send()
+     });
+  });
+
+  app.get("/getquestionforuser1/:emp_id", redisMiddleware2, function(req, res,data) {
+    let key = req.params.emp_id;
+    let queriesForUser="";
+    clientRedis.get(key, function(err, reply)
+    {
+      if(reply){
+          //res.send(reply);
+          console.log("In Cache find");
+          queriesForUser = reply;
+      }else{
+          console.log("Getting data from Stored Proc");
+          console.log(key);
+        var req = new sql.Request();
+        req.execute('SP_GETQUSTIONSFORUSER', function (err,data) {
+            if (err) console.log(err),
+                console.log(data);
+            //Loop through data here
+            console.log("Succesful in geting data from SP");
+//            console.log(data.recordset);
+            for (var i = 0; i < data.recordset.length;  i++) {
+                //console.log("Finding Data" + data.recordset[i].emp_id);
+
+                var id=data.recordset[i].emp_id;
+                var empQuestions=[];
+                do {
+                    //console.log(data[i]);
+                    empQuestions.push(data.recordset[i]);
+                    i++;
+                } while (i < data.recordset.length && id==data.recordset[i].emp_id);
+              clientRedis.set(id, JSON.stringify(empQuestions));
+              console.log("Completed for " + id);
+              if (id == key)
+              {
+                  //console.log(empQuestions);
+                  //queriesForUser = JSON.stringify(empQuestions);
+                  console.log(queriesForUser);
+              }
+            }
+           });
+        }
+        console.log(queriesForUser);
+        res.send((queriesForUser));
+        //console.log(response);
+    });
+   
+});
+
+  //app.get("/getquestionforuser1/:emp_id", redisMiddleware2, function(req, res) {
+    //res.send(JSON.stringify(results.recordset));
+  //});
+  
+  
+  
 app.get('/user/:id' ,(req, res,id) => {
     var id = (req.params.id); 
     var req = new sql.Request();
@@ -172,6 +360,30 @@ app.get('/surveyuser' ,(req, res, next) => {
     });
 
 });
+
+//clientRedis.keys('*', function (err, keys) {
+    //if (err) return console.log(err);
+  
+    //for(var i = 0, len = keys.length; i < len; i++) {
+     // console.log(keys[i]);
+    //}
+  //}); 
+
+ 
+
+  clientRedis.set('my test key', 'test');
+  
+  
+
+clientRedis.get('my test key', function (error, result) {
+    if (error) {
+        console.log(error);
+        throw error;
+    }
+    console.log('GET result ->' + result);
+});
+
+
 
 app.get('/surveyuser/:survey_id' ,(req, res, next) => {
     var survey_id = (req.params.survey_id); 
@@ -463,59 +675,7 @@ catch(err){
 }
 
 
-let startTime = new Date(Date.now());
-let endTime = new Date(startTime.getTime() + 5000);
-var rule = new schedule.RecurrenceRule();
-rule.dayOfWeek = [0, new schedule.Range(4, 6)];
-rule.hour = 17;
-rule.minute = 0;
-//{ start: startTime, end: endTime, rule: '*/1 * * * * *' }
-var i = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/1 * * * * *' }, function(){
-  var req = new sql.Request(conn);
-           
-        // query to the database and get the records
-        req.execute('EXEC [dbo].[SP_GETQUSTIONSFORUSER] ', function (res, err, recordset,rowCount) {
-            
-            if (err) console.log(err)
 
-            // send records as a response
-            console.log('Questionsforuser caching created');
-     
-
-    });
-});
-
-var j = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/1 * * * * *' }, function(){
-   
-    var req = new sql.Request(conn);
-             
-          // query to the database and get the records
-          req.execute('SP_GETSURVEYUSER', function (res, err, recordset) {
-              
-              if (err) console.log(err)
-  
-              // send records as a response
-             
-              console.log('Survey caching created');
-  
-      });
-  });
-
-  var k = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/1 * * * * *' }, function(){
-   
-    var req = new sql.Request(conn);
-             
-          // query to the database and get the records
-          req.execute('SP_GETUSERINFO', function (res, err, recordset) {
-              
-              if (err) console.log(err)
-  
-              // send records as a response
-             
-              console.log('userinfo caching created');
-  
-      });
-  });
 
  
 
