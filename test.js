@@ -43,7 +43,31 @@ sql.connect(config, function(err) {
 
 
 
-
+let redisMiddleware = (req, res, next) => {
+   
+    //let key = "userinfo" + req.originalUrl || req.url;
+    let key = "userinfo";
+    clientRedis.get(key, function(err, reply){
+      if(reply){
+          res.send(reply);
+         
+          console.log("Logging from data cache"); 
+          console.log(reply);
+      }{
+          // call the func that executes the stored proce
+          // response of stored proce you should set to cahe
+          // Return the same value
+          res.sendResponse = res.send;
+          res.send = (body) => {
+            clientRedis.set(key, body);
+              res.sendResponse(body);
+             
+              //console.log(body);
+          }
+          next();
+      }
+    });
+  };
 
 
 

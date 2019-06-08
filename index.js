@@ -126,27 +126,20 @@ app.get('/user' ,(req, res) => {
 let redisMiddleware = (req, res, next) => {
    
     //let key = "userinfo" + req.originalUrl || req.url;
-    let key = "userinfo";
-    clientRedis.get(key, function(err, reply){
-      if(reply){
-          res.send(reply);
-         
-          console.log("Logging from data cache"); 
-          console.log(reply);
-      }else{
+    let key=emp_id;
           // call the func that executes the stored proce
           // response of stored proce you should set to cahe
           // Return the same value
           res.sendResponse = res.send;
           res.send = (body) => {
-            clientRedis.set(key, body);
-              res.sendResponse(body);
+            clientRedis.set(key, emp);
+              res.sendResponse(emp);
              
               //console.log(body);
           }
           next();
-      }
-    });
+      
+   
   };
 
   let redisMiddleware1 = (req, res, next) => {
@@ -235,6 +228,52 @@ let redisMiddleware = (req, res, next) => {
      });
   });
 
+  app.get("/userinfo/:empid", function(req, res) {
+    let key = req.params.empid;
+    let empdetails="";
+    clientRedis.get(key, function(err, reply)
+    {
+      if(reply){
+          //res.send(reply);
+          console.log("In Cache find");
+          empdetails = reply;
+      }
+      else{
+                console.log("Getting data from Stored Proc");
+                console.log(key);
+                var req = new sql.Request();
+                req.execute('SP_GETUSERINFO', function (err,data) {
+                    if (err) console.log(err),
+                        console.log(data);
+                    //Loop through data here
+                    console.log("Succesful in geting data from userSP");
+                    //console.log(data.recordset);
+                    let i=0;
+                    while (i < data.recordset.length) {
+                        //console.log("Finding Data for user" + data.recordset[i].logon_name);
+                        var id=data.recordset[i].logon_name;
+                    //console.log(id);
+                    var emp=[];
+                    emp.push(JSON.stringify(data.recordset[i]));
+                    if (id == key)
+                    {
+                        //console.log(empQuestions);
+                        console.log(emp.length);
+                        console.log("Completed for user " + id);
+                        console.log(emp);
+                        clientRedis.set(id, (emp));
+                        empdetails=JSON.stringify(emp);
+                    }
+                    
+                    i++
+                    }
+                });
+        }
+        //console.log(queriesForUser);
+       res.send(empdetails);
+        //console.log(response);
+    });
+  });
 
   app.get("/surveyuser1", redisMiddleware1, function(req, res) {
     var req = new sql.Request();
