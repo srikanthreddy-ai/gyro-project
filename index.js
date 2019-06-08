@@ -280,7 +280,8 @@ let redisMiddleware = (req, res, next) => {
           //res.send(reply);
           console.log("In Cache find");
           queriesForUser = reply;
-      }else{
+      }
+      else {
           console.log("Getting data from Stored Proc");
           console.log(key);
         var req = new sql.Request();
@@ -290,28 +291,36 @@ let redisMiddleware = (req, res, next) => {
             //Loop through data here
             console.log("Succesful in geting data from SP");
 //            console.log(data.recordset);
-            for (var i = 0; i < data.recordset.length;  i++) {
-                //console.log("Finding Data" + data.recordset[i].emp_id);
+            for (var i = 0; i < data.recordset.length;  ) {
+                console.log("Finding Data" + data.recordset[i].emp_id);
 
                 var id=data.recordset[i].emp_id;
                 var empQuestions=[];
-                do {
+                var checkLoop = true;
+                var loopCounter=0;
+                while(i < data.recordset.length && id == data.recordset[i].emp_id) {
                     //console.log(data[i]);
+                    if (id==key)
+                    {
+                        console.log("test");
+                    }
                     empQuestions.push(data.recordset[i]);
                     i++;
-                } while (i < data.recordset.length && id==data.recordset[i].emp_id);
-              clientRedis.set(id, JSON.stringify(empQuestions));
+                }
+
+                clientRedis.set(id, JSON.stringify(empQuestions));
               console.log("Completed for " + id);
               if (id == key)
               {
+                  console.log(empQuestions.length);
                   //console.log(empQuestions);
-                  //queriesForUser = JSON.stringify(empQuestions);
+                  queriesForUser = JSON.stringify(empQuestions);
                   console.log(queriesForUser);
               }
             }
            });
         }
-        console.log(queriesForUser);
+        //console.log(queriesForUser);
         res.send((queriesForUser));
         //console.log(response);
     });
