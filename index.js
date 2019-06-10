@@ -78,7 +78,7 @@ var config = {
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
-    port:1400,
+    port:1433,
     multipleStatements:true,
     parseJSON:true,
     options: {    
