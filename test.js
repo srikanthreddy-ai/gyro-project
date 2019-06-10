@@ -494,3 +494,39 @@ var j = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/1 * * * 
         }
     });
 });
+
+
+
+console.log("Getting data from Stored Proc");
+                console.log(key);
+                var req = new sql.Request();
+                req.query('select * from [dbo].[TBL_RESPONSE]', function (err,data) {
+                    if (err) console.log(err),
+                        console.log(data);
+                    //Loop through data here
+                    console.log("Succesful in geting data from userSP");
+                    console.log(data.recordset);
+                    let i=0;
+                    while (i < data.recordset.length) {
+                        //console.log("Finding Data for user" + data.recordset[i].logon_name);
+                        var id=data.recordset[i].emp_id;
+                    //console.log(id);
+                    var history=[];
+                    history.push(JSON.stringify(data.recordset[i]));
+                    if (id == key)
+                    {
+                        //console.log(empQuestions);
+                        console.log(history.length);
+                        console.log("Completed for user " + id);
+                        console.log(history);
+                        clientRedis.set("userhistory"+id, (history));
+                        userhostory=JSON.stringify(history);
+                    }
+                    i++;
+                    }
+                });
+
+
+                client.setex(key, parseInt((new Date().setHours(23, 59, 59, 999)-new Date())/1000),  function(err, result) {
+                    //check for success/failure here
+                  });

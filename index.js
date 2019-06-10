@@ -147,6 +147,7 @@ let redisMiddleware = (req, res, next) => {
   let redisMiddleware1 = (req, res, next) => {
     let key = "surveyuser" + req.originalUrl || req.url;
     
+    
           res.sendResponse = res.send;
           res.send = (body) => {
             clientRedis.set(key, body);
@@ -228,11 +229,12 @@ let redisMiddleware = (req, res, next) => {
                     console.log("Succesful in geting data from userSP");
                     //console.log(data.recordset);
                     let i=0;
+                    var emp=[];
                     while (i < data.recordset.length) {
                         //console.log("Finding Data for user" + data.recordset[i].logon_name);
                         var id=data.recordset[i].logon_name;
                     //console.log(id);
-                    var emp=[];
+                   
                     emp.push(JSON.stringify(data.recordset[i]));
                     if (id == key)
                     {
@@ -243,6 +245,7 @@ let redisMiddleware = (req, res, next) => {
                         clientRedis.set(id, (emp));
                         empdetails=JSON.stringify(emp);
                     }
+                    
                     i++;
                     }
                 });
@@ -251,6 +254,10 @@ let redisMiddleware = (req, res, next) => {
        res.send(empdetails);
         //console.log(response);
     });
+  });
+
+  app.get("/userinfo/*", function(req, res) {
+    res.send("Please check EMP id")
   });
 
   app.get("/surveyuser1", redisMiddleware1, function(req, res) {
@@ -362,7 +369,9 @@ let redisMiddleware = (req, res, next) => {
           //res.send(reply);
           console.log("In Cache find");
           queriesForUser = reply;
+  
       }
+      
       else {
           console.log("Getting data from Stored Proc");
           console.log(key);
@@ -390,7 +399,7 @@ let redisMiddleware = (req, res, next) => {
                     i++;
                 }
 
-                clientRedis.set(id, JSON.stringify(empQuestions));
+                clientRedis.setex(id,parseInt((new Date().setHours(23, 59, 59, 999)-new Date())/1000), JSON.stringify(empQuestions));
               console.log("Completed for " + id);
               if (id == key)
               {
@@ -406,34 +415,137 @@ let redisMiddleware = (req, res, next) => {
         res.send((queriesForUser));
         //console.log(response);
     });
+
+   
    
 });
 
-  //app.get("/getquestionforuser1/:emp_id", redisMiddleware2, function(req, res) {
-    //res.send(JSON.stringify(results.recordset));
-  //});
+app.get('/', function (req, res) {
+    var services=[],
+    services=[{"1.getuserlanguage":"http://13.234.235.89:3000/userinfo/[logon_name]"},
+    {"2.getquestionforuser":"http://13.234.235.89:3000/getquestionforuser1/[emp_id]"},
+    {"3.getsurveyuser":"http://13.234.235.89:3000/surveyuser1/[emp_id]"},
+    {"4.getuserhistory":"http://13.234.235.89:3000/usersurveyhistory/[emp_id]"},
+    {"5.getuserhistory":"http://13.234.235.89:3000/pictures/[emp_id]"}]
+    res.send(services)
+  });
+
   
-  
-  
-app.get('/user/:id' ,(req, res,id) => {
-    var id = (req.params.id); 
-    var req = new sql.Request();
-        // query to the database and get the records
-    req.input('id', sql.nvarchar)
-        req.query('SELECT * FROM TBL_USER WHERE emp_id ='+[id], function (err, rows) {
+
+
+
+app.get("/usersurveyhistory/:empid",  function(req, res) {
+    let key=req.params.empid;
+    let usersurveyhostory="";
+
+    clientRedis.get("userhistory"+key, function(err, reply)
+    {
+      if(reply){
+          //res.send(reply);
+          console.log("In Cache find");
+          usersurveyhostory = reply;
+      }
+       {
+          console.log("Getting data from Stored Proc");
+          console.log(key);
+        var req = new sql.Request();
+        req.query('SELECT * FROM [dbo].[TBL_RESPONSE]', function (err,data) {
             if (err) console.log(err),
-            console.log(rows);
+                console.log(data);
+            //Loop through data here
+            console.log("Succesful in geting data from SP");
+//            console.log(data.recordset);
+            for (var i = 0; i < data.recordset.length;  ) {
+                console.log("Finding Data" + data.recordset[i].emp_id);
 
-            // send records as a response
-            console.log(id),
-           res.send(JSON.stringify(rows));
-         
+                var id=data.recordset[i].emp_id;
+                var history=[];
+                var checkLoop = true;
+                var loopCounter=0;
+                while(i < data.recordset.length && id == data.recordset[i].emp_id) {
+                    //console.log(data[i]);
+                    if (id==key)
+                    {
+                        console.log("test");
+                    }
+                    history.push(data.recordset[i]);
+                    i++;
+                }
+
+                clientRedis.set("userhistory"+id, JSON.stringify(history));
+              console.log("Completed for " + id);
+              if (id == key)
+              {
+                  console.log(history.length);
+                  //console.log(empQuestions);
+                  usersurveyhostory = JSON.stringify(history);
+                  console.log(usersurveyhostory);
+              }
+            }
+           });
+        }
+        //console.log(queriesForUser);
+        res.send(usersurveyhostory);
+        //console.log(response);
     });
-
-});
-
+  });
 
 
+  app.get("/pictures/:picture_id",  function(req, res) {
+    let key=req.params.picture_id;
+    let picture="";
+    console.log(key);
+    clientRedis.get("picture"+key, function(err, reply)
+    {
+      if(reply){
+          //res.send(reply);
+          console.log("In Cache find");
+          picture = reply;
+      }
+     {
+        console.log("Getting data from Stored Proc");
+        console.log(key);
+      var req = new sql.Request();
+      req.query('select * from [dbo].[TBL_PICTURES]', function (err,data) {
+          if (err) console.log(err),
+              console.log(data);
+          //Loop through data here
+          console.log("Succesful in geting data from SP");
+//            console.log(data.recordset);
+          for (var i = 0; i < data.recordset.length;  ) {
+              console.log("Finding Data" + data.recordset[i].picture_id);
+
+              var id=data.recordset[i].picture_id;
+              var pictures=[];
+              var checkLoop = true;
+              var loopCounter=0;
+              while(i < data.recordset.length && id == data.recordset[i].picture_id) {
+                  //console.log(data[i]);
+                  if (id==key)
+                  {
+                      console.log("test");
+                  }
+                  pictures.push(data.recordset[i]);
+                  i++;
+              }
+
+              clientRedis.set("picture"+id, JSON.stringify(pictures));
+            console.log("Completed for " + id);
+            if (id == key)
+            {
+                console.log(pictures.length);
+                //console.log(empQuestions);
+                picture = JSON.stringify(pictures);
+                console.log(picture);
+            }
+          }
+         });
+        }
+        //console.log(queriesForUser);
+       res.send(picture);
+        //console.log(response);
+    });
+  });
 
 //clientRedis.keys('*', function (err, keys) {
     //if (err) return console.log(err);
@@ -444,45 +556,6 @@ app.get('/user/:id' ,(req, res,id) => {
   //}); 
 
  
-
-
-
-
-
-app.get('/surveyuser/:survey_id' ,(req, res, next) => {
-    var survey_id = (req.params.survey_id); 
-    var emp_id = (req.params.emp_id); 
-    var req = new sql.Request();
-           
-        // query to the database and get the records
-        req.query(' select * from TBL_SURVEY_USERS where survey_id='+["survey_id"], function (err, results) {
-            
-            if (err) console.log(err)
-
-            // send records as a response
-            
-            res.send(JSON.stringify(results.recordset));
-     
-
-    });
-
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -500,22 +573,6 @@ async () => {
 */
 
 
-app.get('/feedback/:emp_id' ,(req, res) => {
-    var emp_id = (req.params.emp_id); 
-    var req = new sql.Request();
-        // query to the database and get the records
-    
-        req.query('select * from TBL_FEEDBACK WHERE emp_id ='+["emp_id"], function (err, results) {
-            if (err) console.log(err),
-            console.log(emp_id);
-
-            // send records as a response
-            res.send(results.recordset[0]);
-     
-
-    });
-
-});
 
 
 
