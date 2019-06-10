@@ -74,10 +74,10 @@ const config = {
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: '13.234.235.89', // You can use 'localhost\\instance' to connect to named instance 
+    server: '172.19.1.167', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
-    port:1433,
+    port:1033,
     multipleStatements:true,
     parseJSON:true,
     options: {     
