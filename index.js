@@ -74,20 +74,22 @@ const config = {
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
+    server: 'CORPSSPS01\\SQLEXPRESS',
+    //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
-    port:1433,
+    port:1400,
     multipleStatements:true,
     parseJSON:true,
-    options: {     
+    options: {    
+        instance:'SQLEXPRESS', 
      auto_reconnect: true,
       encrypt: false
     }// Use this if you're on Windows Azure
 }
 
 
-
+var connection = new Connection(config); 
 var conn=sql.connect(config, function(err) {
     if (err) console.log(err);
     // ... error checks
