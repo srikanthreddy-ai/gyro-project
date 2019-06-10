@@ -74,7 +74,7 @@ const config = {
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'CORPSSPS01\\SQLEXPRESS',
+    server: '172.19.1.167',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
