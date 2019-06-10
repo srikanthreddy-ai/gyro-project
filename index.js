@@ -77,7 +77,7 @@ var config = {
     server: '172.19.1.167', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
-    port:1033,
+    port:1433,
     multipleStatements:true,
     parseJSON:true,
     options: {     
