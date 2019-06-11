@@ -74,7 +74,7 @@ const config = {
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: '13.234.235.89',
+    server: 'localhost',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -222,7 +222,7 @@ let redisMiddleware = (req, res, next) => {
       }
       {           
           
-                        console.log("Getting data from survey user Stored Proc");
+                 console.log("Getting data from survey user Stored Proc");
                     console.log(key);
                     
                     var req = new sql.Request();
