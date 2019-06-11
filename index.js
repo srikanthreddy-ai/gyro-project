@@ -74,7 +74,7 @@ const config = {
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'localhost',
+    server: '13.234.235.89',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -130,7 +130,7 @@ app.get('/user' ,(req, res) => {
 let redisMiddleware = (req, res, next) => {
    
     //let key = "userinfo" + req.originalUrl || req.url;
-    let key=emp_id;
+    let key=empname;
           // call the func that executes the stored proce
           // response of stored proce you should set to cahe
           // Return the same value
@@ -294,19 +294,11 @@ let redisMiddleware = (req, res, next) => {
 
     let surveyForUser="";
     console.log(key);
-    clientRedis.get("survey"+key, function(err, reply)
-    {
-                if(reply){
-                    //res.send(reply);
-                    console.log("In Cache find");
-                    surveyForUser = reply;
-                    console.log(surveyForUser);
-                }
-               else
-                {
+    clientRedis.get("survey"+key, function(err, reply){
+                 
                     console.log("Getting data from survey user Stored Proc");
                     console.log(key);
-                  
+                    surveyForUser=reply;
                     var req = new sql.Request();
                     req.execute('SP_GETSURVEYUSER', function (err,data) {
                         if (err) console.log(err),
@@ -337,16 +329,18 @@ let redisMiddleware = (req, res, next) => {
                           {
                               console.log(surveyuser.length);
                               //console.log(empQuestions);
-                              queriesForUser = JSON.stringify(surveyuser);
+                              surveyForUser = JSON.stringify(surveyuser);
                               console.log(surveyForUser);
                           }
                         }
                     });
-                }
+                
                 
                   res.send(surveyForUser);
                   console.log(surveyForUser);
+                  
     });
+    
   });
 
 
