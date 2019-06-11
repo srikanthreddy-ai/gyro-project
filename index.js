@@ -74,7 +74,7 @@ const config = {
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'localhost',
+    server: '13.234.235.89',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -210,48 +210,57 @@ let redisMiddleware = (req, res, next) => {
      });
   });
 
-  app.get("/userinfo/:empid", function(req, res) {
-    let key = req.params.empid;
+  app.get("/userinfo/:empname", function(req, res) {
+    let key = req.params.empname;
     let empdetails="";
-    clientRedis.get(key, function(err, reply)
+    clientRedis.get("user"+key, function(err, reply)
     {
       if(reply){
           //res.send(reply);
           console.log("In Cache find");
           empdetails = reply;
       }
-      else{
-                console.log("Getting data from Stored Proc");
-                console.log(key);
-                var req = new sql.Request();
-                req.execute('SP_GETUSERINFO', function (err,data) {
-                    if (err) console.log(err),
-                        console.log(data);
-                    //Loop through data here
-                    console.log("Succesful in geting data from userSP");
-                    //console.log(data.recordset);
-                    let i=0;
-                    var emp=[];
-                    while (i < data.recordset.length) {
-                        //console.log("Finding Data for user" + data.recordset[i].logon_name);
-                        var id=data.recordset[i].logon_name;
-                    //console.log(id);
-                   
-                    emp.push(JSON.stringify(data.recordset[i]));
-                    if (id == key)
-                    {
-                        //console.log(empQuestions);
-                        console.log(emp.length);
-                        console.log("Completed for user " + id);
-                        console.log(emp);
-                        clientRedis.set(id, (emp));
-                        empdetails=JSON.stringify(emp);
-                    }
+      {           
+          
+                        console.log("Getting data from survey user Stored Proc");
+                    console.log(key);
                     
-                    i++;
-                    }
-                });
-        }
+                    var req = new sql.Request();
+                    req.execute('SP_GETUSERINFO', function (err,data) {
+                        if (err) console.log(err),
+                            console.log(data);
+                        //Loop through data here
+                        console.log("Succesful in geting data from userSP");
+                        //console.log(data.recordset);
+                        for (var i = 0; i < data.recordset.length;  ) {
+                            console.log("Finding Data" + data.recordset[i].logon_name);
+
+                            var id=data.recordset[i].logon_name;
+                            var emp=[];
+                            var checkLoop = true;
+                            var loopCounter=0;
+                            while(i < data.recordset.length && id == data.recordset[i].logon_name) {
+                                //console.log(data[i]);
+                                if (id==key)
+                                {
+                                    console.log("test");
+                                }
+                                emp.push(data.recordset[i]);
+                                i++;
+                            }
+
+                            clientRedis.set("user"+id, JSON.stringify(emp));
+                            console.log("Completed for " + id);
+                            if (id == key)
+                            {
+                                console.log(emp.length);
+                                //console.log(empQuestions);
+                                empdetails = JSON.stringify(emp);
+                                console.log(empdetails);
+                            }
+                        }
+                    });
+            }
         //console.log(queriesForUser);
        res.send(empdetails);
         //console.log(response);
