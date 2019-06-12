@@ -427,11 +427,11 @@ let redisMiddleware = (req, res, next) => {
 
 app.get('/', function (req, res) {
     var services=[],
-    services=[{"1.getuserlanguage":"http://13.234.235.89:3000/userinfo/[logon_name]"},
-    {"2.getquestionforuser":"http://13.234.235.89:3000/getquestionforuser1/[emp_id]"},
-    {"3.getsurveyuser":"http://13.234.235.89:3000/surveyuser1/[emp_id]"},
-    {"4.getuserhistory":"http://13.234.235.89:3000/usersurveyhistory/[emp_id]"},
-    {"5.getuserhistory":"http://13.234.235.89:3000/pictures/[emp_id]"}]
+    services=[{"1.getuserlanguage":"http://ip:3000/userinfo/[logon_name]"},
+    {"2.getquestionforuser":"http://ip:3000/getquestionforuser1/[emp_id]"},
+    {"3.getsurveyuser":"http://ip:3000/surveyuser1/[emp_id]"},
+    {"4.getuserhistory":"http://ip:3000/usersurveyhistory/[emp_id]"},
+    {"5.getuserhistory":"http://ip:3000/pictures/[emp_id]"}]
     res.send(services)
   });
 
@@ -445,12 +445,7 @@ app.get("/usersurveyhistory/:empid",  function(req, res) {
 
     clientRedis.get("userhistory"+key, function(err, reply)
     {
-      if(reply){
-          //res.send(reply);
-          console.log("In Cache find");
-          usersurveyhostory = reply;
-      }
-       {
+        usersurveyhostory=reply;
           console.log("Getting data from Stored Proc");
           console.log(key);
         var req = new sql.Request();
@@ -488,7 +483,6 @@ app.get("/usersurveyhistory/:empid",  function(req, res) {
               }
             }
            });
-        }
         //console.log(queriesForUser);
         res.send(usersurveyhostory);
         //console.log(response);
@@ -496,8 +490,8 @@ app.get("/usersurveyhistory/:empid",  function(req, res) {
   });
 
 
-  app.get("/pictures/:picture_id",  function(req, res) {
-    let key=req.params.picture_id;
+  app.get("/pictures/:survey_id",  function(req, res) {
+    let key=req.params.survey_id;
     let picture="";
     console.log(key);
     clientRedis.get("picture"+key, function(err, reply)
@@ -507,24 +501,81 @@ app.get("/usersurveyhistory/:empid",  function(req, res) {
           console.log("In Cache find");
           picture = reply;
       }
-     {
+       {
         console.log("Getting data from Stored Proc");
         console.log(key);
       var req = new sql.Request();
-      req.query('select * from [dbo].[TBL_PICTURES]', function (err,data) {
+      req.query('[dbo].[SP_GETSURVEYIMAGE]', function (err,data) {
           if (err) console.log(err),
               console.log(data);
           //Loop through data here
           console.log("Succesful in geting data from SP");
 //            console.log(data.recordset);
           for (var i = 0; i < data.recordset.length;  ) {
-              console.log("Finding Data" + data.recordset[i].picture_id);
+              console.log("Finding Data" + data.recordset[i].survey_id);
 
-              var id=data.recordset[i].picture_id;
+              var id=data.recordset[i].survey_id;
               var pictures=[];
               var checkLoop = true;
               var loopCounter=0;
-              while(i < data.recordset.length && id == data.recordset[i].picture_id) {
+              while(i < data.recordset.length && id == data.recordset[i].survey_id) {
+                  //console.log(data[i]);
+                  if (id==key)
+                  {
+                      console.log("test");
+                  }
+                  pictures.push(data.recordset[i]);
+                  i++;
+              }
+
+              clientRedis.set("picture"+id, JSON.stringify(pictures));
+            console.log("Completed for " + id);
+            if (id == key)
+            {
+                console.log(pictures.length);
+                //console.log(empQuestions);
+                picture = JSON.stringify(pictures);
+                console.log(picture);
+            }
+          }
+         });
+        }
+        //console.log(queriesForUser);
+       res.send(picture);
+        //console.log(response);
+    });
+  });
+
+
+  app.get("/history/:survey_id/:emp_id",  function(req, res) {
+    let key=req.params.survey_id;
+    let picture="";
+    console.log(key);
+    clientRedis.get("picture"+key, function(err, reply)
+    {
+      if(reply){
+          //res.send(reply);
+          console.log("In Cache find");
+          picture = reply;
+      }
+       {
+        console.log("Getting data from Stored Proc");
+        console.log(key);
+      var req = new sql.Request();
+      req.query('[dbo].[SP_GETSURVEYIMAGE]', function (err,data) {
+          if (err) console.log(err),
+              console.log(data);
+          //Loop through data here
+          console.log("Succesful in geting data from SP");
+//            console.log(data.recordset);
+          for (var i = 0; i < data.recordset.length;  ) {
+              console.log("Finding Data" + data.recordset[i].survey_id);
+
+              var id=data.recordset[i].survey_id;
+              var pictures=[];
+              var checkLoop = true;
+              var loopCounter=0;
+              while(i < data.recordset.length && id == data.recordset[i].survey_id) {
                   //console.log(data[i]);
                   if (id==key)
                   {
@@ -561,7 +612,22 @@ app.get("/usersurveyhistory/:empid",  function(req, res) {
   //}); 
 
  
+  app.get('/pictur/:survey_id' ,(req, res) => {
+      var survey_id=req.params.survey_id
+   
+    var req = new sql.Request();
+        // query to the database and get the records
+    
+        req.execute('SP_GETSURVEYIMAGE', function (err,results) {
+            if (err) console.log(err),
 
+            // send records as a response
+            console.time()
+            res.send(JSON.stringify(results.recordset));
+            
+    });
+
+});
 
 
 /*
@@ -576,16 +642,6 @@ async () => {
     }
 }
 */
-
-
-
-
-
-
-
-
-
-
 
 
 try{
