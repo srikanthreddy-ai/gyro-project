@@ -377,7 +377,7 @@ let redisMiddleware = (req, res, next) => {
   
       }
       
-      else {
+       {
           console.log("Getting data from Stored Proc");
           console.log(key);
         var req = new sql.Request();
@@ -404,7 +404,7 @@ let redisMiddleware = (req, res, next) => {
                     i++;
                 }
 
-                clientRedis.setex(id,parseInt((new Date().setHours(23, 59, 59, 999)-new Date())/1000), JSON.stringify(empQuestions));
+                clientRedis.set(id, JSON.stringify(empQuestions));
               console.log("Completed for " + id);
               if (id == key)
               {
@@ -420,7 +420,7 @@ let redisMiddleware = (req, res, next) => {
         res.send((queriesForUser));
         //console.log(response);
     });
-
+   
    
    
 });
