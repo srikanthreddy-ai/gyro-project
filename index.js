@@ -358,12 +358,12 @@ let redisMiddleware = (req, res, next) => {
      });
   });
 
-  app.get("/getquestionforuser1/:emp_id", function(req, res,data) {
+  app.get("/getquestionforuser1/:emp_id", function(req, res) {
     let key = req.params.emp_id;
     let queriesForUser="";
-    clientRedis.get(key, function(err, reply)
+    clientRedis.get("questions"+key, function(err, reply)
     {
-     
+        queriesForUser=reply;
           console.log("Getting data from Stored Proc");
           console.log(key);
         var req = new sql.Request();
@@ -390,7 +390,7 @@ let redisMiddleware = (req, res, next) => {
                     i++;
                 }
 
-                clientRedis.set(id, JSON.stringify(empQuestions));
+                clientRedis.set("questions"+id, JSON.stringify(empQuestions));
               console.log("Completed for " + id);
               if (id == key)
               {
