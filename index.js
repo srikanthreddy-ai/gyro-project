@@ -370,14 +370,10 @@ let redisMiddleware = (req, res, next) => {
     let queriesForUser="";
     clientRedis.get(key, function(err, reply)
     {
-      if(reply){
-          //res.send(reply);
-          console.log("In Cache find");
+
           queriesForUser = reply;
   
-      }
-      
-       {
+
           console.log("Getting data from Stored Proc");
           console.log(key);
         var req = new sql.Request();
@@ -388,7 +384,7 @@ let redisMiddleware = (req, res, next) => {
             console.log("Succesful in geting data from SP");
 //            console.log(data.recordset);
             for (var i = 0; i < data.recordset.length;  ) {
-                console.log("Finding Data" + data.recordset[i].emp_id);
+                //console.log("Finding Data" + data.recordset[i].emp_id);
 
                 var id=data.recordset[i].emp_id;
                 var empQuestions=[];
@@ -415,7 +411,6 @@ let redisMiddleware = (req, res, next) => {
               }
             }
            });
-        }
         //console.log(queriesForUser);
         res.send((queriesForUser));
         //console.log(response);
