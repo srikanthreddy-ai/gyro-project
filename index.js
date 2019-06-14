@@ -74,7 +74,7 @@ const config = {
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'localhost',
+    server: '13.234.235.89',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -215,13 +215,7 @@ let redisMiddleware = (req, res, next) => {
     let empdetails="";
     clientRedis.get("user"+key, function(err, reply)
     {
-      if(reply){
-          //res.send(reply);
-          console.log("In Cache find");
-          empdetails = reply;
-      }
-      {           
-          
+        empdetails=reply;
                  console.log("Getting data from survey user Stored Proc");
                     console.log(key);
                     
@@ -260,7 +254,6 @@ let redisMiddleware = (req, res, next) => {
                             }
                         }
                     });
-            }
         //console.log(queriesForUser);
        res.send(empdetails);
         //console.log(response);
@@ -365,15 +358,12 @@ let redisMiddleware = (req, res, next) => {
      });
   });
 
-  app.get("/getquestionforuser1/:emp_id", redisMiddleware2, function(req, res,data) {
+  app.get("/getquestionforuser1/:emp_id", function(req, res,data) {
     let key = req.params.emp_id;
     let queriesForUser="";
     clientRedis.get(key, function(err, reply)
     {
-
-          queriesForUser = reply;
-  
-
+     
           console.log("Getting data from Stored Proc");
           console.log(key);
         var req = new sql.Request();
@@ -384,7 +374,7 @@ let redisMiddleware = (req, res, next) => {
             console.log("Succesful in geting data from SP");
 //            console.log(data.recordset);
             for (var i = 0; i < data.recordset.length;  ) {
-                //console.log("Finding Data" + data.recordset[i].emp_id);
+                console.log("Finding Data" + data.recordset[i].emp_id);
 
                 var id=data.recordset[i].emp_id;
                 var empQuestions=[];
@@ -415,9 +405,6 @@ let redisMiddleware = (req, res, next) => {
         res.send((queriesForUser));
         //console.log(response);
     });
-   
-   
-   
 });
 
 app.get('/', function (req, res) {
