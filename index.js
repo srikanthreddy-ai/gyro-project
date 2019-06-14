@@ -427,11 +427,11 @@ let redisMiddleware = (req, res, next) => {
 
 app.get('/', function (req, res) {
     var services=[],
-    services=[{"1.getuserlanguage":"http://ip:3000/userinfo/[logon_name]"},
-    {"2.getquestionforuser":"http://ip:3000/getquestionforuser1/[emp_id]"},
-    {"3.getsurveyuser":"http://ip:3000/surveyuser1/[emp_id]"},
-    {"4.getuserhistory":"http://ip:3000/usersurveyhistory/[emp_id]"},
-    {"5.getuserhistory":"http://ip:3000/pictures/[emp_id]"}]
+    services=[{"1.getuserlanguage":"http://host:3000/userinfo/[logon_name]"},
+    {"2.getquestionforuser":"http://host:3000/getquestionforuser1/[emp_id]"},
+    {"3.getsurveyuser":"http://host:3000/surveyuser1/[emp_id]"},
+    {"4.getuserhistory":"http://host:3000/usersurveyhistory/[emp_id]"},
+    {"5.getuserhistory":"http://host:3000/pictures/[emp_id]"}]
     res.send(services)
   });
 

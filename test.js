@@ -530,3 +530,6 @@ console.log("Getting data from Stored Proc");
                 client.setex(key, parseInt((new Date().setHours(23, 59, 59, 999)-new Date())/1000),  function(err, result) {
                     //check for success/failure here
                   });
+
+                  client.set(key,36,  function(err, result) {
+                  });
