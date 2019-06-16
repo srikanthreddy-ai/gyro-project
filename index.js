@@ -528,6 +528,62 @@ app.get("/usersurveyhistory/:empid",  function(req, res) {
     });
   });
 
+  app.get("/getsurveyimage/:survey_id",  function(req, res) {
+    let key=req.params.survey_id;
+    let surveypicture="";
+    console.log(key);
+    clientRedis.get("surveypicture"+key, function(err, reply)
+    {
+      if(reply){
+          //res.send(reply);
+          console.log("In Cache find");
+          surveypicture = reply;
+      }
+       {
+        console.log("Getting data from Stored Proc");
+        console.log(key);
+      var req = new sql.Request();
+      req.query('[dbo].[SP_GETSURVEYQUESTIONSIMAGE]', function (err,data) {
+          if (err) console.log(err),
+              console.log(data);
+          //Loop through data here
+          console.log("Succesful in geting data from SP");
+//            console.log(data.recordset);
+          for (var i = 0; i < data.recordset.length;  ) {
+              //console.log("Finding Data" + data.recordset[i].survey_id);
+
+              var id=data.recordset[i].survey_id;
+              var surveyimage=[];
+              var checkLoop = true;
+              var loopCounter=0;
+              while(i < data.recordset.length && id == data.recordset[i].survey_id) {
+                  //console.log(data[i]);
+                  if (id==key)
+                  {
+                      //console.log("test");
+                  }
+                  surveyimage.push(data.recordset[i]);
+                  i++;
+              }
+
+              clientRedis.set("surveypicture"+id, JSON.stringify(surveyimage));
+            console.log("Completed for " + id);
+            if (id == key)
+            {
+                console.log(surveyimage.length);
+                //console.log(empQuestions);
+                surveypicture = JSON.stringify(surveyimage);
+                //console.log(picture);
+            }
+          }
+         });
+        }
+        //console.log(queriesForUser);
+       res.send(surveypicture);
+        //console.log(response);
+    });
+  });
+
 
   app.get("/history/:survey_id/:emp_id",  function(req, res) {
     let key=req.params.survey_id;
