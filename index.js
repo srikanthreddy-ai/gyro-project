@@ -372,7 +372,7 @@ let redisMiddleware = (req, res, next) => {
             console.log("Succesful in geting data from SP");
 //            console.log(data.recordset);
             for (var i = 0; i < data.recordset.length;  ) {
-                console.log("Finding Data" + data.recordset[i].emp_id);
+                //console.log("Finding Data" + data.recordset[i].emp_id);
 
                 var id=data.recordset[i].emp_id;
                 var empQuestions=[];
@@ -382,14 +382,14 @@ let redisMiddleware = (req, res, next) => {
                     //console.log(data[i]);
                     if (id==key)
                     {
-                        console.log("test");
+                        //console.log("test");
                     }
                     empQuestions.push(data.recordset[i]);
                     i++;
                 }
 
                 clientRedis.set("questions"+id, JSON.stringify(empQuestions));
-              console.log("Completed for " + id);
+              //console.log("Completed for " + id);
               if (id == key)
               {
                   console.log(empQuestions.length);
