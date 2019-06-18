@@ -74,7 +74,7 @@ const config = {
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'localhost',
+    server: '13.234.235.89',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -356,12 +356,19 @@ let redisMiddleware = (req, res, next) => {
      });
   });
 
-  app.get("/getquestionforuser1/:emp_id", function(req, res) {
+  app.get("/getquestionforuser1/:emp_id",redisMiddleware2, function(req, res) {
     let key = req.params.emp_id;
     let queriesForUser="";
     clientRedis.get("questions"+key, function(err, reply)
     {
-        queriesForUser=reply;
+        if(reply){
+            //res.send(reply);
+            console.log("In Cache find");
+            queriesForUser = reply;
+            
+    
+        }
+       if(reply=!reply) {
           console.log("Getting data from Stored Proc");
           console.log(key);
         var req = new sql.Request();
@@ -399,6 +406,7 @@ let redisMiddleware = (req, res, next) => {
               }
             }
            });
+        }
         //console.log(queriesForUser);
         res.send((queriesForUser));
         //console.log(response);
