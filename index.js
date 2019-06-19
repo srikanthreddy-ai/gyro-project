@@ -74,7 +74,7 @@ const config = {
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'localhost',
+    server: '13.234.235.89',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -368,7 +368,7 @@ let redisMiddleware = (req, res, next) => {
             
     
         }
-       if(reply=!reply) {
+       else {
           console.log("Getting data from Stored Proc");
           console.log(key);
         var req = new sql.Request();
@@ -395,7 +395,7 @@ let redisMiddleware = (req, res, next) => {
                     i++;
                 }
 
-                clientRedis.set("questions"+id, JSON.stringify(empQuestions));
+                clientRedis.setex("questions"+id,300, JSON.stringify(empQuestions));
               //console.log("Completed for " + id);
               if (id == key)
               {
@@ -687,6 +687,27 @@ async () => {
 }
 */
 
+let startTime = new Date(Date.now());
+let endTime = new Date(startTime.getTime() + 5000);
+var rule = new schedule.RecurrenceRule();
+rule.dayOfWeek = [0, new schedule.Range(4, 6)];
+rule.hour = 17;
+rule.minute = 0;
+//{ start: startTime, end: endTime, rule: '*/1 * * * * *' }
+var i = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/1 * * * * *' }, function(){
+  var req = new sql.Request();
+           
+        // query to the database and get the records
+        req.execute('EXEC [dbo].[SP_GETQUSTIONSFORUSER] ', function (res, err, recordset,rowCount) {
+            
+            if (err) console.log(err)
+
+            // send records as a response
+            console.log('Questionsforuser caching created');
+     
+
+    });
+});
 
 try{
     clientRedis.on('connect', function(err) {
