@@ -356,7 +356,7 @@ let redisMiddleware = (req, res, next) => {
      });
   });
 
-  app.get("/getquestionforuser1/:emp_id",redisMiddleware2, function(req, res) {
+  app.get("/getquestionforuser1/:emp_id", function(req, res) {
     let key = req.params.emp_id;
     let queriesForUser="";
     clientRedis.get("questions"+key, function(err, reply)
@@ -395,7 +395,7 @@ let redisMiddleware = (req, res, next) => {
                     i++;
                 }
 
-                clientRedis.setex("questions"+id,300, JSON.stringify(empQuestions));
+                clientRedis.setex("questions"+id,40, JSON.stringify(empQuestions));
               //console.log("Completed for " + id);
               if (id == key)
               {
