@@ -359,58 +359,63 @@ let redisMiddleware = (req, res, next) => {
   app.get("/getquestionforuser1/:emp_id", function(req, res) {
     let key = req.params.emp_id;
     let queriesForUser="";
-    clientRedis.get("questions"+key, function(err, reply)
-    {
-        if(reply){
-            //res.send(reply);
-            console.log("In Cache find");
-            queriesForUser = reply;
-            
-    
-        }
-       else {
-          console.log("Getting data from Stored Proc");
-          console.log(key);
-        var req = new sql.Request();
-        req.execute('SP_GETQUSTIONSFORUSER', function (err,data) {
-            if (err) console.log(err),
-                console.log(data);
-            //Loop through data here
-            console.log("Succesful in geting data from SP");
-//            console.log(data.recordset);
-            for (var i = 0; i < data.recordset.length;  ) {
-                //console.log("Finding Data" + data.recordset[i].emp_id);
-
-                var id=data.recordset[i].emp_id;
-                var empQuestions=[];
-                var checkLoop = true;
-                var loopCounter=0;
-                while(i < data.recordset.length && id == data.recordset[i].emp_id) {
-                    //console.log(data[i]);
-                    if (id==key)
+    try{
+                    clientRedis.get("questions"+key, function(err, reply)
                     {
-                        //console.log("test");
-                    }
-                    empQuestions.push(data.recordset[i]);
-                    i++;
-                }
+                        if(reply){
+                            //res.send(reply);
+                            console.log("In Cache find");
+                            queriesForUser = reply;
+                            
+                    
+                        }
+                    else {
+                        console.log("Getting data from Stored Proc");
+                        console.log(key);
+                        var req = new sql.Request();
+                        req.execute('SP_GETQUSTIONSFORUSER', function (err,data) {
+                            if (err) console.log(err),
+                                console.log(data);
+                            //Loop through data here
+                            console.log("Succesful in geting data from SP");
+                //            console.log(data.recordset);
+                            for (var i = 0; i < data.recordset.length;  ) {
+                                //console.log("Finding Data" + data.recordset[i].emp_id);
 
-                clientRedis.setex("questions"+id,40, JSON.stringify(empQuestions));
-              //console.log("Completed for " + id);
-              if (id == key)
-              {
-                  console.log(empQuestions.length);
-                  //console.log(empQuestions);
-                  queriesForUser = JSON.stringify(empQuestions);
-                  console.log(queriesForUser);
-              }
-            }
-           });
-        }
-        //console.log(queriesForUser);
-        res.send((queriesForUser));
-        //console.log(response);
-    });
+                                var id=data.recordset[i].emp_id;
+                                var empQuestions=[];
+                                var checkLoop = true;
+                                var loopCounter=0;
+                                while(i < data.recordset.length && id == data.recordset[i].emp_id) {
+                                    //console.log(data[i]);
+                                    if (id==key)
+                                    {
+                                        //console.log("test");
+                                    }
+                                    empQuestions.push(data.recordset[i]);
+                                    i++;
+                                }
+
+                                clientRedis.setex("questions"+id,40, JSON.stringify(empQuestions));
+                            //console.log("Completed for " + id);
+                            if (id == key)
+                            {
+                                console.log(empQuestions.length);
+                                //console.log(empQuestions);
+                                queriesForUser = JSON.stringify(empQuestions);
+                                console.log(queriesForUser);
+                            }
+                            }
+                        });
+                        }
+                        //console.log(queriesForUser);
+                        res.send((queriesForUser));
+                        //console.log(response);
+                    });
+      }
+catch(err){
+    res.send(errors.error("Something went wrong, please try again", 400, err));
+      }
 });
 
 app.get('/', function (req, res) {
