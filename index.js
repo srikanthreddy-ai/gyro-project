@@ -74,7 +74,7 @@ const config = {
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'localhost',
+    server: '13.234.235.89',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -296,7 +296,7 @@ let redisMiddleware = (req, res, next) => {
   app.get("/getquestionforuser1/:emp_id", function(req, res) {
     let empid=req.params.emp_id ;
 	let key = req.params.emp_id +"_Query" ;
-    let userQuestions = 'abcd';
+    let userQuestions = '';
     let cacheFound = false;
 
     try
