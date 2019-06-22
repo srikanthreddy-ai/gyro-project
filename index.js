@@ -434,29 +434,9 @@ app.get('/', function (req, res) {
     });
   });
 
-  app.get("/getquestionforuser1", redisMiddleware2, function(req, res) {
-    var req = new sql.Request();
+ 
 
-            req.execute('SP_GETQUSTIONSFORUSER', function (err,results) {
-                if (err) console.log(err),
-
-                console.time()
-                res.send(JSON.stringify(results.recordset));
-                
-            });     
-  });
-
-  app.get("/userinfo",  function(req, res) {
-    var req = new sql.Request();
-    req.execute('SP_GETUSERINFO', function (err,results) {
-        if (err) console.log(err),
-
-        console.time()
-        res.send(JSON.stringify(results.recordset));
-        
-     });
-   
-  });
+ 
   
 
 
