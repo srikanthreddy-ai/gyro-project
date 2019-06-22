@@ -144,7 +144,6 @@ createRoutes(app, config);
                     req.execute('SP_GETUSERINFO', function (err,data) {
                         if (err) console.log(err),
                             console.log(data);
-                        //Loop through data here
                         console.log("Succesful in geting data from userSP");
                         for (var i = 0; i < data.recordset.length;  ) {
                             console.log("Finding Data" + data.recordset[i].logon_name);
@@ -447,6 +446,7 @@ app.get('/', function (req, res) {
 
   app.get("/getquestionforuser1", redisMiddleware2, function(req, res) {
     var req = new sql.Request();
+    try{
     req.execute('SP_GETQUSTIONSFORUSER', function (err,results) {
         if (err) console.log(err),
         console.log(emp_id);
@@ -455,6 +455,10 @@ app.get('/', function (req, res) {
         res.send(JSON.stringify(results.recordset));
         
      });
+    }
+    catch(err){
+        res.send(err);
+    }
   });
   
 
