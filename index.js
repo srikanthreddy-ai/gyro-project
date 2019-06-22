@@ -20,28 +20,12 @@ var session = require('express-session');
 var redisStore = require('connect-redis')(session);
 const responseTime = require('response-time')
 var schedule = require('node-schedule');
-/*var mysqlConnection=mysql.createConnection({
-    host:'localhost',
-    user:'root',
-    password:'',
-    database:'mydb'
-});
-mysqlConnection.connect((err)=>{
-    if(!err)
- console.log('Database connected');
- else
- console.log('database connection  \n error' + JSON.stringify(err, undefine, 2));
 
-});*/
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser. json());
 
-/*app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-  });*/
+
 
   app.use(function (req, res, next) {
     //Enabling CORS 
@@ -61,16 +45,7 @@ app.use(session({
     resave: false
 }));
 app.use(responseTime());
-/*
-const config = {
-    user: 'SAEEsa',
-    password: 'gyrit@123',
-    server: '13.234.235.89', // You can use 'localhost\\instance' to connect to named instance
-    database: 'SAEEdb',
-    port:1433
-    
-}
-*/
+
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
@@ -105,27 +80,6 @@ createRoutes(app, config);
 
 
 
-
-    
-
-let redisMiddleware = (req, res, next) => {
-   
-    //let key = "userinfo" + req.originalUrl || req.url;
-    let key=empname;
-          // call the func that executes the stored proce
-          // response of stored proce you should set to cahe
-          // Return the same value
-          res.sendResponse = res.send;
-          res.send = (body) => {
-            clientRedis.set(key, emp);
-              res.sendResponse(emp);
-             
-              //console.log(body);
-          }
-          next();
-      
-   
-  };
 
   let redisMiddleware1 = (req, res, next) => {
     let key = "surveyuser" + req.originalUrl || req.url;
@@ -192,7 +146,6 @@ let redisMiddleware = (req, res, next) => {
                             console.log(data);
                         //Loop through data here
                         console.log("Succesful in geting data from userSP");
-                        //console.log(data.recordset);
                         for (var i = 0; i < data.recordset.length;  ) {
                             console.log("Finding Data" + data.recordset[i].logon_name);
 
@@ -201,7 +154,6 @@ let redisMiddleware = (req, res, next) => {
                             var checkLoop = true;
                             var loopCounter=0;
                             while(i < data.recordset.length && id == data.recordset[i].logon_name) {
-                                //console.log(data[i]);
                                 if (id==key)
                                 {
                                     console.log("test");
@@ -215,15 +167,14 @@ let redisMiddleware = (req, res, next) => {
                             if (id == key)
                             {
                                 console.log(emp.length);
-                                //console.log(empQuestions);
+            
                                 empdetails = JSON.stringify(emp);
                                 console.log(empdetails);
                             }
                         }
                     });
-        //console.log(queriesForUser);
+       
        res.send(empdetails);
-        //console.log(response);
     });
   });
 
@@ -248,9 +199,7 @@ let redisMiddleware = (req, res, next) => {
                     req.execute('SP_GETSURVEYUSER', function (err,data) {
                         if (err) console.log(err),
                             console.log(data);
-                        //Loop through data here
                         console.log("Succesful in geting data from userSP");
-                        //console.log(data.recordset);
                         for (var i = 0; i < data.recordset.length;  ) {
                             console.log("Finding Data" + data.recordset[i].emp_id);
             
@@ -259,7 +208,6 @@ let redisMiddleware = (req, res, next) => {
                             var checkLoop = true;
                             var loopCounter=0;
                             while(i < data.recordset.length && id == data.recordset[i].emp_id) {
-                                //console.log(data[i]);
                                 if (id==key)
                                 {
                                     console.log("test");
@@ -273,7 +221,6 @@ let redisMiddleware = (req, res, next) => {
                           if (id == key)
                           {
                               console.log(surveyuser.length);
-                              //console.log(empQuestions);
                               surveyForUser = JSON.stringify(surveyuser);
                               console.log(surveyForUser);
                           }
@@ -309,7 +256,6 @@ let redisMiddleware = (req, res, next) => {
                     console.log("in cache");
                     cacheFound = true;
                     userQuestions=reply;
-                    //reply;//console.log("Cached Data " + userQuestions);
                     res.send(reply);
                 }
                 else
@@ -324,17 +270,15 @@ let redisMiddleware = (req, res, next) => {
                                         var checkLoop = true;
                                         var loopCounter=0;
                                             while(i < data.recordset.length && id == data.recordset[i].emp_id) {
-                                                //console.log(data[i]);
                                                 
                                                 empQuestions.push(data.recordset[i]);
                                                 i++;
                                             }
-                                        clientRedis.setex(id+"_Query",120,JSON.stringify(empQuestions));
+                                        clientRedis.setex(id+"_Query",60*60*12,JSON.stringify(empQuestions));
                                         if (id === empid)
                                         {
 
                                             queriesForUser = JSON.stringify(empQuestions);
-                                            //console.log(queriesForUser);
                                         }
                                 }
                                 if(queriesForUser)
@@ -346,18 +290,14 @@ let redisMiddleware = (req, res, next) => {
                     }
             });
 
-            //console.log("In cache found true" + cacheFound);
+           
         }
-        
-        //res.send(JSON.stringify(userQuestions));
 
     }
     catch(err){
        // queriesForUser = errors.error("Something went wrong, please try again", 400, err);
        res.send("Something went wrong, please try again");
     }
-
-    //res.send(userQuestions);
 });
 
 
@@ -386,9 +326,6 @@ app.get('/', function (req, res) {
         req.query('SELECT * FROM [dbo].[TBL_RESPONSE]', function (err,data) {
             if (err) console.log(err),
                 console.log(data);
-            //Loop through data here
-            console.log("Succesful in geting data from SP");
-//            console.log(data.recordset);
             for (var i = 0; i < data.recordset.length;  ) {
                 console.log("Finding Data" + data.recordset[i].emp_id);
 
@@ -397,7 +334,6 @@ app.get('/', function (req, res) {
                 var checkLoop = true;
                 var loopCounter=0;
                 while(i < data.recordset.length && id == data.recordset[i].emp_id) {
-                    //console.log(data[i]);
                     if (id==key)
                     {
                         console.log("test");
@@ -407,19 +343,13 @@ app.get('/', function (req, res) {
                 }
 
                 clientRedis.set("userhistory"+id, JSON.stringify(history));
-              console.log("Completed for " + id);
               if (id == key)
               {
-                  console.log(history.length);
-                  //console.log(empQuestions);
                   usersurveyhostory = JSON.stringify(history);
-                  console.log(usersurveyhostory);
               }
             }
            });
-        //console.log(queriesForUser);
         res.send(usersurveyhostory);
-        //console.log(response);
     });
   });
 
@@ -427,24 +357,18 @@ app.get('/', function (req, res) {
   app.get("/pictures/:survey_id",  function(req, res) {
     let key=req.params.survey_id;
     let picture="";
-    console.log(key);
     clientRedis.get("picture"+key, function(err, reply)
     {
       if(reply){
-          //res.send(reply);
-          console.log("In Cache find");
           picture = reply;
       }
-       {
-        console.log("Getting data from Stored Proc");
-        console.log(key);
+      else {
+
       var req = new sql.Request();
       req.query('[dbo].[SP_GETSURVEYIMAGE]', function (err,data) {
           if (err) console.log(err),
               console.log(data);
-          //Loop through data here
           console.log("Succesful in geting data from SP");
-//            console.log(data.recordset);
           for (var i = 0; i < data.recordset.length;  ) {
               console.log("Finding Data" + data.recordset[i].survey_id);
 
@@ -453,7 +377,6 @@ app.get('/', function (req, res) {
               var checkLoop = true;
               var loopCounter=0;
               while(i < data.recordset.length && id == data.recordset[i].survey_id) {
-                  //console.log(data[i]);
                   if (id==key)
                   {
                       console.log("test");
@@ -466,17 +389,12 @@ app.get('/', function (req, res) {
             console.log("Completed for " + id);
             if (id == key)
             {
-                console.log(pictures.length);
-                //console.log(empQuestions);
                 picture = JSON.stringify(pictures);
-                console.log(picture);
             }
           }
          });
         }
-        //console.log(queriesForUser);
        res.send(picture);
-        //console.log(response);
     });
   });
 
@@ -488,7 +406,6 @@ app.get('/', function (req, res) {
     clientRedis.get("surveypicture"+key, function(err, reply)
     {
       if(reply){
-          //res.send(reply);
           console.log("In Cache find");
           surveypicture = reply;
       }
@@ -499,18 +416,14 @@ app.get('/', function (req, res) {
       req.query('[dbo].[SP_GETSURVEYQUESTIONSIMAGE]', function (err,data) {
           if (err) console.log(err),
               console.log(data);
-          //Loop through data here
+        
           console.log("Succesful in geting data from SP");
-//            console.log(data.recordset);
           for (var i = 0; i < data.recordset.length;  ) {
-              //console.log("Finding Data" + data.recordset[i].survey_id);
-
               var id=data.recordset[i].survey_id;
               var surveyimage=[];
               var checkLoop = true;
               var loopCounter=0;
               while(i < data.recordset.length && id == data.recordset[i].survey_id) {
-                  //console.log(data[i]);
                   if (id==key)
                   {
                       //console.log("test");
@@ -523,35 +436,24 @@ app.get('/', function (req, res) {
             console.log("Completed for " + id);
             if (id == key)
             {
-                console.log(surveyimage.length);
-                //console.log(empQuestions);
                 surveypicture = JSON.stringify(surveyimage);
-                //console.log(picture);
             }
           }
          });
         }
-        //console.log(queriesForUser);
        res.send(surveypicture);
-        //console.log(response);
     });
   });
 
   app.get("/getquestionforuser1", redisMiddleware2, function(req, res) {
     var req = new sql.Request();
-    // query to the database and get the records
-
     req.execute('SP_GETQUSTIONSFORUSER', function (err,results) {
         if (err) console.log(err),
         console.log(emp_id);
 
-        //Loop through data here
-
-
-        // send records as a response
         console.time()
         res.send(JSON.stringify(results.recordset));
-        //res.send()
+        
      });
   });
   
