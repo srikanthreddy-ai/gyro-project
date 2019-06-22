@@ -439,7 +439,6 @@ app.get('/', function (req, res) {
 
             req.execute('SP_GETQUSTIONSFORUSER', function (err,results) {
                 if (err) console.log(err),
-                console.log(emp_id);
 
                 console.time()
                 res.send(JSON.stringify(results.recordset));
@@ -449,19 +448,14 @@ app.get('/', function (req, res) {
 
   app.get("/userinfo",  function(req, res) {
     var req = new sql.Request();
-    try{
     req.execute('SP_GETUSERINFO', function (err,results) {
         if (err) console.log(err),
-        console.log(emp_id);
 
         console.time()
         res.send(JSON.stringify(results.recordset));
         
      });
-    }
-    catch(err){
-        res.send(err);
-    }
+   
   });
   
 
