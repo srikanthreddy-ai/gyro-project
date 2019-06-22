@@ -146,30 +146,26 @@ createRoutes(app, config);
                             console.log(data);
                         console.log("Succesful in geting data from userSP");
                         for (var i = 0; i < data.recordset.length;  ) {
-                            console.log("Finding Data" + data.recordset[i].logon_name);
-
                             var id=data.recordset[i].logon_name;
                             var emp=[];
                             var checkLoop = true;
                             var loopCounter=0;
                             while(i < data.recordset.length && id == data.recordset[i].logon_name) {
-                                if (id==key)
-                                {
-                                    console.log("test");
-                                }
+                               
                                 emp.push(data.recordset[i]);
                                 i++;
+
                             }
 
                             clientRedis.set("user"+id, JSON.stringify(emp));
-                            console.log("Completed for " + id);
                             if (id == key)
                             {
-                                console.log(emp.length);
-            
                                 empdetails = JSON.stringify(emp);
-                                console.log(empdetails);
                             }
+                            else{
+                                empdetails="USER NOT FOUND";
+                            }
+                           
                         }
                     });
        
@@ -186,7 +182,6 @@ createRoutes(app, config);
 
   app.get("/surveyuser1/:empid",redisMiddleware1,  function(req, res) {
     let key=req.params.empid;
-
     let surveyForUser="";
     console.log(key);
     clientRedis.get("survey"+key, function(err, reply){
@@ -198,37 +193,29 @@ createRoutes(app, config);
                     req.execute('SP_GETSURVEYUSER', function (err,data) {
                         if (err) console.log(err),
                             console.log(data);
-                        console.log("Succesful in geting data from userSP");
                         for (var i = 0; i < data.recordset.length;  ) {
-                            console.log("Finding Data" + data.recordset[i].emp_id);
             
                             var id=data.recordset[i].emp_id;
                             var surveyuser=[];
                             var checkLoop = true;
                             var loopCounter=0;
                             while(i < data.recordset.length && id == data.recordset[i].emp_id) {
-                                if (id==key)
-                                {
-                                    console.log("test");
-                                }
                                 surveyuser.push(data.recordset[i]);
                                 i++;
                             }
             
                             clientRedis.set("survey"+id, JSON.stringify(surveyuser));
-                          console.log("Completed for " + id);
                           if (id == key)
                           {
-                              console.log(surveyuser.length);
                               surveyForUser = JSON.stringify(surveyuser);
-                              console.log(surveyForUser);
                           }
+                          else{
+                            surveyForUser="USER NOT AVAILABLE FOR THE SURVEY";
+                        }
                         }
                     });
-                
-                
+                       
                   res.send(surveyForUser);
-                  console.log(surveyForUser);
                   
     });
     
@@ -278,6 +265,9 @@ createRoutes(app, config);
                                         {
 
                                             queriesForUser = JSON.stringify(empQuestions);
+                                        }
+                                        else{
+                                            queriesForUser="USER NOT AVAILABLE FOR THE TEST";
                                         }
                                 }
                                 if(queriesForUser)
@@ -446,8 +436,21 @@ app.get('/', function (req, res) {
 
   app.get("/getquestionforuser1", redisMiddleware2, function(req, res) {
     var req = new sql.Request();
+
+            req.execute('SP_GETQUSTIONSFORUSER', function (err,results) {
+                if (err) console.log(err),
+                console.log(emp_id);
+
+                console.time()
+                res.send(JSON.stringify(results.recordset));
+                
+            });     
+  });
+
+  app.get("/userinfo",  function(req, res) {
+    var req = new sql.Request();
     try{
-    req.execute('SP_GETQUSTIONSFORUSER', function (err,results) {
+    req.execute('SP_GETUSERINFO', function (err,results) {
         if (err) console.log(err),
         console.log(emp_id);
 
