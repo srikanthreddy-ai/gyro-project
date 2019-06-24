@@ -52,7 +52,7 @@ app.use(responseTime());
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: '13.234.235.89',
+    server: 'localhost',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -268,7 +268,7 @@ createRoutes(app, config);
                                                 empQuestions.push(data.recordset[i]);
                                                 i++;
                                             }
-                                        clientRedis.setex(id+"_Query",60*60*12,JSON.stringify(empQuestions));
+                                        clientRedis.setex(id+"_Query",120,JSON.stringify(empQuestions));
                                         if (id === empid)
                                         {
 
