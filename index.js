@@ -136,7 +136,6 @@ createRoutes(app, config);
        
        res.send(empdetails);
     });
-    next();
   });
 
   
@@ -180,7 +179,7 @@ createRoutes(app, config);
                   res.send(surveyForUser);
                   
     });
-    next();
+
   });
 
 
@@ -247,7 +246,6 @@ createRoutes(app, config);
     catch(err){
        res.send("Something went wrong, please try again");
     }
-    next();
 });
 
 
@@ -398,7 +396,26 @@ app.get('/', function (req, res) {
 });
 
 
+app.post('/addnewuser' ,(req, res, next) => {
+    var logon_name=JSON.stringify(req.body.logon_name);
+    var emp_id=JSON.stringify(req.body.emp_id);
+    var name=JSON.stringify(req.body.name);
+    var plant_id=JSON.stringify(req.body.plant_id);
+    var email=JSON.stringify(req.body.email);
+    var lang_pref=JSON.stringify(req.body.lang_pref);
+    console.log(logon_name);
+    console.log(lang_pref);
+    console.log(emp_id);
+  var req = new sql.Request();
+  req.query("EXEC SP_ADDNEWUSER @logon_name='"+logon_name+"',@emp_id='"+emp_id+"',@name='"+name+"',@plant_id="+plant_id+",@email='"+email+"',@lang_pref='"+lang_pref+"'", function (err, data) {
+      
+      if (err) console.log(err);
+      res.send("New user added");
+      });
+    
+  
 
+});
 
  
   
