@@ -129,8 +129,7 @@ createRoutes(app, config);
                             {
                                 empdetails = JSON.stringify(emp);
                             }
-                           
-                           
+                
                         }
                     });
        
@@ -177,7 +176,6 @@ createRoutes(app, config);
                     });
                        
                   res.send(surveyForUser);
-                  
     });
 
   });
@@ -345,7 +343,7 @@ app.get('/', function (req, res) {
       if(reply){
           surveypicture = reply;
       }
-       {
+      else {
       var req = new sql.Request();
       req.query('[dbo].[SP_GETSURVEYQUESTIONSIMAGE]', function (err,data) {
           if (err) console.log(err);
@@ -385,8 +383,18 @@ app.get('/', function (req, res) {
     var req = new sql.Request();
     req.query("EXEC SP_UPDATEUSERLANGUAGE @logon_name='"+logon_name+"',@lang_pref='"+lang_pref+"';", function (err, data) {
         
-        if (err) console.log(err);
-        res.send("User Prefered Language Updated");
+        if (err) {
+            console.log(err);
+        }
+        else{
+            if(lang_pref=="") {
+                res.send("Please Select Language")
+            } 
+            else{
+                res.send("User Prefered Language Updated");
+            }
+       
+        }
         });
       }
       catch(err){
@@ -397,27 +405,67 @@ app.get('/', function (req, res) {
 
 
 app.post('/addnewuser' ,(req, res, next) => {
-    var logon_name=JSON.stringify(req.body.logon_name);
-    var emp_id=JSON.stringify(req.body.emp_id);
-    var name=JSON.stringify(req.body.name);
-    var plant_id=JSON.stringify(req.body.plant_id);
-    var email=JSON.stringify(req.body.email);
-    var lang_pref=JSON.stringify(req.body.lang_pref);
+    try{
+    var logon_name=(req.body.logon_name);
+    var emp_id=(req.body.emp_id);
+    var name=(req.body.name);
+    var plant_id=(req.body.plant_id);
+    var email=(req.body.email);
+    var lang_pref=(req.body.lang_pref);
     console.log(logon_name);
-    console.log(lang_pref);
     console.log(emp_id);
+    console.log(name);
   var req = new sql.Request();
-  req.query("EXEC SP_ADDNEWUSER @logon_name='"+logon_name+"',@emp_id='"+emp_id+"',@name='"+name+"',@plant_id="+plant_id+",@email='"+email+"',@lang_pref='"+lang_pref+"'", function (err, data) {
+  req.query("EXEC SP_ADDNEWUSER @logon_name='"+logon_name+"',@emp_id='"+emp_id+"',@name='"+name+"',@plant_id="+plant_id+",@email='"+email+"',@lang_pref='"+lang_pref+"';", function (err, data) {
       
-      if (err) console.log(err);
-      res.send("New user added");
+            if (err) {
+                console.log(err);
+            }
+            else{
+                if(emp_id==""||name==""||plant_id==""||email==""||lang_pref==""){
+                    res.send("Please provide all info");
+                }
+                else{
+                res.send("New user added successfully");
+                }
+            }
       });
     
-  
+    }
+    catch(err){
+        throw Error(err);
+    }
 
 });
 
- 
+app.post('/addnewsurveyuser' ,(req, res, next) => {
+    try{
+    var emp_id=(req.body.emp_id);
+    var plant_id=(req.body.plant_id);
+    console.log(plant_id);
+    console.log(emp_id);
+  var req = new sql.Request();
+  req.query("EXEC SP_ADDNEWSURVEYUSER @emp_id='"+emp_id+"',@plant_id='"+plant_id+"';", function (err, data) {
+      
+            if (err) {
+                console.log(err);
+            }
+            else{
+                if(plant_id==""||emp_id==""){
+                    res.send("Please provide survey user information");
+                }
+                else{
+                res.send("New survey user added successfully");
+                }
+            }
+      });
+    
+    }
+    catch(err){
+        throw Error(err);
+    }
+
+});
   
 
 
