@@ -102,9 +102,7 @@ createRoutes(app, config);
   app.get("/userinfo/:empname", function(req, res, next) {
     let key =lowerCase(req.params.empname);
     let empdetails="";
-    clientRedis.get("user"+key, function(err, reply)
-    {
-        empdetails=reply;   
+       try{
                     var req = new sql.Request();
                     req.execute('SP_GETUSERINFO', function (err,data) {
                         if (err) console.log(err);
@@ -116,25 +114,23 @@ createRoutes(app, config);
                             ignoreCase.equals(id, data.recordset[i].logon_name)
                             var checkLoop = true;
                             var loopCounter=0;
-                            ci(id).equals(key);
-                            while(i < data.recordset.length && id ==lowerCase(data.recordset[i].logon_name)) {
-                                
+                            while(i < data.recordset.length && id ==lowerCase(data.recordset[i].logon_name)) { 
                                 emp.push(data.recordset[i]);
                                 i++;
-
                             }
-
-                            clientRedis.set("user"+id,JSON.stringify(emp));
                             if (id == key)
                             {
                                 empdetails = JSON.stringify(emp);
                             }
                 
                         }
+                        res.send(empdetails);
                     });
-       
-       res.send(empdetails);
-    });
+    
+                }
+                catch(err){
+                    throw Error(err);
+                }
   });
 
   
@@ -144,12 +140,10 @@ createRoutes(app, config);
 
   
 
-  app.get("/surveyuser1/:empid",redisMiddleware1,  function(req, res,next) {
+  app.get("/surveyuser1/:empid",  function(req, res,next) {
     let key=req.params.empid;
-    let surveyForUser="";
-    clientRedis.get("survey"+key, function(err, reply){
-                 
-                    surveyForUser=reply;
+    let surveyForUser="";      
+    try{      
                     var req = new sql.Request();
                     req.execute('SP_GETSURVEYUSER', function (err,data) {
                         if (err) console.log(err);
@@ -161,23 +155,22 @@ createRoutes(app, config);
                             var loopCounter=0;
                             while(i < data.recordset.length && id == data.recordset[i].emp_id) {
                                 surveyuser.push(data.recordset[i]);
-                                i++;
+                                i++;  
                             }
-            
-                            clientRedis.set("survey"+id, JSON.stringify(surveyuser));
-                          if (id == key)
-                          {
-                              surveyForUser = JSON.stringify(surveyuser);
-                          }
-                          else{
-                            surveyForUser="USER NOT AVAILABLE FOR THE SURVEY";
+                            if (id == key)
+                            {
+                                surveyForUser = JSON.stringify(surveyuser);
+                            }
+                           
+                           
                         }
-                        }
+                        
+                        res.send(surveyForUser);
                     });
-                       
-                  res.send(surveyForUser);
-    });
-
+                }
+                catch(err){
+                    throw Error(err);
+                }
   });
 
 
