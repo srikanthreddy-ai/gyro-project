@@ -1,5 +1,6 @@
 var mysql=require('mysql');
 var express=require('express');
+var router = express.Router();
 var app=express();
 var bodyParser=require('body-parser');
 var nodemon=require('nodemon');
@@ -22,7 +23,8 @@ const responseTime = require('response-time')
 var schedule = require('node-schedule');
 var lowerCase = require('lower-case');
 var ignoreCase = require('ignore-case');
-var ci = require('case-insensitive')
+var ci = require('case-insensitive');
+var userinfo=require('./router/userinfo');
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
@@ -52,7 +54,7 @@ app.use(responseTime());
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'localhost',
+    server: '13.234.235.89',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -69,9 +71,14 @@ var config = {
 
 var connection = new Connection(config); 
 var conn=sql.connect(config, function(err) {
+    try{
     if (err) console.log(err);
     // ... error checks
     console.log(config.server);
+    }
+    catch(err){
+        throw Error(err);
+    }
 
 
 });
@@ -97,7 +104,6 @@ createRoutes(app, config);
 
  
 
-  
 
   app.get("/userinfo/:empname", function(req, res, next) {
     let key =lowerCase(req.params.empname);
@@ -460,6 +466,115 @@ app.post('/addnewsurveyuser' ,(req, res, next) => {
 
 });
   
+app.post('/addsurveyaction' ,(req, res, next) => {
+    try{
+    var survey_id=(req.body.survey_id);
+    var emp_id=(req.body.emp_id);
+    var action=(req.body.action);
+    console.log(survey_id);
+    console.log(emp_id);
+  var req = new sql.Request();
+  req.query("EXEC SP_ADDSURVEYACTION @survey_id='"+survey_id+"',@emp_id='"+emp_id+"',@action="+action+";", function (err, data) {
+          
+    
+            if (err) {
+                res.send(emp_id+"  User already added for the survey  "+survey_id);
+            }
+            else{
+                        if(emp_id==""||action==""){
+                            res.send("Please provide survey action information");
+                        }
+                        if(emp_id==emp_id){
+                            res.send("User already added");
+                        }
+                        else{
+                        res.send("New survey action added successfully");
+                        }
+               }
+      });
+    
+    }
+    catch(err){
+        throw Error(err);
+    }
+
+});
+
+app.post('/updateresponse' ,(req, res, next) => {
+
+    var survey_id=(req.body.survey_id);
+    var emp_id=(req.body.emp_id);
+    var qno_1=(req.body.qno_1);
+    var attempt_1=(req.body.attempt_1);
+    var ans_1=(req.body.ans_1);
+    var points_1=(req.body.points_1);
+    var qno_2=(req.body.qno_2);
+    var attempt_2=(req.body.attempt_2);
+    var ans_2=(req.body.ans_2);
+    var points_2=(req.body.points_2);
+    var qno_3=(req.body.qno_3);
+    var attempt_3=(req.body.attempt_3);
+    var ans_3=(req.body.ans_3);
+    var points_3=(req.body.points_3);
+
+    console.log(survey_id);
+    console.log(emp_id);
+    console.log(qno_1);
+    console.log(attempt_1);
+    console.log(ans_1);
+    console.log( points_1);
+   
+  var req = new sql.Request();
+  req.query("EXEC SP_UPDATERESPONSE @survey_id='"+survey_id+"', @emp_id='"+emp_id+"', @qno_1="+qno_1+", @attempt_1="+attempt_1+", @ans_1='"+ans_1+"', @points_1="+points_1+", @qno_2="+qno_2+", @attempt_2="+attempt_2+", @ans_2='"+ans_2+"',@points_2="+points_2+",@qno_3="+qno_3+",@attempt_3="+attempt_3+",@ans_3='"+ans_3+"',@points_3="+points_3+"", function (err, data) {
+      
+            if (err) {
+                console.log(err);
+            }
+            else{
+               
+                res.send("User Response added successfully");
+                
+            }
+      });
+    
+ 
+
+});
+
+app.post('/response' ,(req, res, next) => {
+    try{
+    
+    var emp_id=(req.body.emp_id);
+    var survey_id=(req.body.survey_id);
+    var question_no=(req.body.question_no);
+    var attempts=(req.body.attempts);
+    var answer=(req.body.answer);
+    var points=(req.body.points);
+    var date=(req.body.date);
+    
+    console.log(question_no);
+  var req = new sql.Request();
+  req.query("EXEC SP_RESPONSE @emp_id='"+emp_id+"',@survey_id='"+survey_id+"',@question_no="+question_no+",@attempts='"+attempts+"',@answer='"+answer+"',@points="+points+",@date="+date+"", function (err, data) {
+      
+            if (err) {
+                console.log(err);
+            }
+            else{
+                if(emp_id==""||survey_id==""){
+                    res.send("JSON validation Error");
+                }
+                else{
+                res.send("User Response added successfully");
+                }
+            }
+      });
+    
+    }
+    catch(err){
+        throw Error(err);
+    }
+
+});
 
 
 try{
