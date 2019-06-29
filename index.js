@@ -184,14 +184,18 @@ createRoutes(app, config);
 
 
 
-  app.get("/getquestionforuser1/:emp_id", function(req, res,next) {
+  var job=app.get("/getquestionforuser1/:emp_id", function(req, res,next) {
     let empid=req.params.emp_id ;
 	let key = req.params.emp_id +"_Query" ;
     let userQuestions = '';
     let cacheFound = false;
+    var req = new sql.Request();
 
     try
 	{
+        
+  req.query("EXEC SP_STARTSURVEY", function (req,res,err, data) {console.log("Survey started") });
+  req.query("EXEC SP_STOPSURVEY", function (req,res,err, data) {console.log("Survey Stoped");});
         if (clientRedis != null)
         {
             clientRedis.get(key, function(err, reply){
@@ -204,7 +208,6 @@ createRoutes(app, config);
                 else
                 {
                    
-                    var req = new sql.Request();
                     req.execute('SP_GETQUSTIONSFORUSER', function (err,data) {
                             if (data != 'undefined' && data.recordset != 'undefined')	{
                                 for (var i = 0; i < data.recordset.length;  ) {
@@ -246,7 +249,32 @@ createRoutes(app, config);
 });
 
 
-
+var j = schedule.scheduleJob('*/2 * * * *', function(){
+    console.log('caching every one min');
+    var req = new sql.Request();
+    req.execute('SP_GETQUSTIONSFORUSER', function (err,data) {
+            if (data != 'undefined' && data.recordset != 'undefined')	{
+                for (var i = 0; i < data.recordset.length;  ) {
+                        var id=data.recordset[i].emp_id;
+                        var empQuestions=[];
+                        var checkLoop = true;
+                        var loopCounter=0;
+                            while(i < data.recordset.length && id == data.recordset[i].emp_id) {
+                                
+                                empQuestions.push(data.recordset[i]);
+                                i++;
+                                //console.log(id);
+                            }
+                        clientRedis.setex(id+"_Query",120,JSON.stringify(empQuestions));
+                        
+                       
+                }
+        
+            }
+        });
+    
+    
+  });
 
 app.get('/', function (req, res) {
     var services=[],
@@ -258,41 +286,7 @@ app.get('/', function (req, res) {
     res.send(services)
   });
 
-  app.get("/usersurveyhistory/:empid",  function(req, res) {
-    let key=req.params.empid;
-    let usersurveyhostory="";
-
-    clientRedis.get("userhistory"+key, function(err, reply)
-    {
-        usersurveyhostory=reply;
-        
-        var req = new sql.Request();
-        req.query('SELECT * FROM [dbo].[TBL_RESPONSE]', function (err,data) {
-            if (err) console.log(err);
-               
-            for (var i = 0; i < data.recordset.length;  ) {
-                console.log("Finding Data" + data.recordset[i].emp_id);
-
-                var id=data.recordset[i].emp_id;
-                var history=[];
-                var checkLoop = true;
-                var loopCounter=0;
-                while(i < data.recordset.length && id == data.recordset[i].emp_id) {
-                
-                    history.push(data.recordset[i]);
-                    i++;
-                }
-
-                clientRedis.set("userhistory"+id, JSON.stringify(history));
-              if (id == key)
-              {
-                  usersurveyhostory = JSON.stringify(history);
-              }
-            }
-           });
-        res.send(usersurveyhostory);
-    });
-  });
+ 
 
 
   app.get("/pictures/:survey_id",  function(req, res) {
@@ -541,6 +535,49 @@ app.post('/updateresponse' ,(req, res, next) => {
 
 });
 
+
+app.get('/startsurvey' ,(req, res, next) => {
+    try{
+  var req = new sql.Request();
+  req.query("EXEC SP_STARTSURVEY", function (err, data) {
+          
+    
+            if (err) {
+                res.send("Something went wrong");
+            }
+            else{
+              res.send("Survey started");
+
+               }
+      });
+    
+    }
+    catch(err){
+        throw Error(err);
+    }
+
+});
+app.get('/stopsurvey' ,(req, res, next) => {
+    try{
+  var req = new sql.Request();
+  req.query("EXEC SP_STOPSURVEY", function (err, data) {
+          
+    
+            if (err) {
+                res.send("Something went wrong");
+            }
+            else{
+              res.send("Survey Stoped");
+
+               }
+      });
+    
+    }
+    catch(err){
+        throw Error(err);
+    }
+
+});
 
 
 
