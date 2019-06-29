@@ -541,40 +541,7 @@ app.post('/updateresponse' ,(req, res, next) => {
 
 });
 
-app.post('/response' ,(req, res, next) => {
-    try{
-    
-    var emp_id=(req.body.emp_id);
-    var survey_id=(req.body.survey_id);
-    var question_no=(req.body.question_no);
-    var attempts=(req.body.attempts);
-    var answer=(req.body.answer);
-    var points=(req.body.points);
-    var date=(req.body.date);
-    
-    console.log(question_no);
-  var req = new sql.Request();
-  req.query("EXEC SP_RESPONSE @emp_id='"+emp_id+"',@survey_id='"+survey_id+"',@question_no="+question_no+",@attempts='"+attempts+"',@answer='"+answer+"',@points="+points+",@date="+date+"", function (err, data) {
-      
-            if (err) {
-                console.log(err);
-            }
-            else{
-                if(emp_id==""||survey_id==""){
-                    res.send("JSON validation Error");
-                }
-                else{
-                res.send("User Response added successfully");
-                }
-            }
-      });
-    
-    }
-    catch(err){
-        throw Error(err);
-    }
 
-});
 
 
 try{
