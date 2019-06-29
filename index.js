@@ -86,25 +86,6 @@ var conn=sql.connect(config, function(err) {
 createRoutes(app, config);
 
 
-
-
-  let redisMiddleware1 = (req, res, next) => {
-    let key = "surveyuser" + req.originalUrl || req.url;
-    
-    
-          res.sendResponse = res.send;
-          res.send = (body) => {
-            clientRedis.set(key, body);
-              res.sendResponse(body);
-          }
-          next();
-  };
-
- 
-
- 
-
-
   app.get("/userinfo/:empname", function(req, res, next) {
     let key =lowerCase(req.params.empname);
     let empdetails="";
@@ -194,8 +175,8 @@ createRoutes(app, config);
     try
 	{
         
-  req.query("EXEC SP_STARTSURVEY", function (req,res,err, data) {console.log("Survey started") });
-  req.query("EXEC SP_STOPSURVEY", function (req,res,err, data) {console.log("Survey Stoped");});
+  req.query("EXEC SP_STARTSURVEY", function (req,res) {console.log("Survey started") });
+  req.query("EXEC SP_STOPSURVEY", function (req,res) {console.log("Survey Stoped");});
         if (clientRedis != null)
         {
             clientRedis.get(key, function(err, reply){
@@ -250,8 +231,9 @@ createRoutes(app, config);
 
 
 var j = schedule.scheduleJob('*/2 * * * *', function(){
-    console.log('caching every one min');
+    console.log('caching every two min');
     var req = new sql.Request();
+    try{
     req.execute('SP_GETQUSTIONSFORUSER', function (err,data) {
             if (data != 'undefined' && data.recordset != 'undefined')	{
                 for (var i = 0; i < data.recordset.length;  ) {
@@ -272,18 +254,16 @@ var j = schedule.scheduleJob('*/2 * * * *', function(){
         
             }
         });
+    }
+    catch(err){
+        throw Error(err);
+    }
     
     
   });
 
-app.get('/', function (req, res) {
-    var services=[],
-    services=[{"1.getuserlanguage":"http://host:3000/userinfo/[logon_name]"},
-    {"2.getquestionforuser":"http://host:3000/getquestionforuser1/[emp_id]"},
-    {"3.getsurveyuser":"http://host:3000/surveyuser1/[emp_id]"},
-    {"4.getuserhistory":"http://host:3000/usersurveyhistory/[emp_id]"},
-    {"5.getuserhistory":"http://host:3000/pictures/[emp_id]"}]
-    res.send(services)
+app.get('/', function (req, res,err) {
+    res.send("Server Connected Succesfully")
   });
 
  
@@ -377,7 +357,7 @@ app.get('/', function (req, res) {
     req.query("EXEC SP_UPDATEUSERLANGUAGE @logon_name='"+logon_name+"',@lang_pref='"+lang_pref+"';", function (err, data) {
         
         if (err) {
-            console.log(err);
+            res.send(err);
         }
         else{
             if(lang_pref=="") {
@@ -416,7 +396,7 @@ app.post('/addnewuser' ,(req, res, next) => {
             }
             else{
                 if(emp_id==""||name==""||plant_id==""||email==""||lang_pref==""){
-                    res.send("Please provide all info");
+                    res.send("JSON not valid or wrong user details");
                 }
                 else{
                 res.send("New user added successfully");
@@ -478,9 +458,6 @@ app.post('/addsurveyaction' ,(req, res, next) => {
                         if(emp_id==""||action==""){
                             res.send("Please provide survey action information");
                         }
-                        if(emp_id==emp_id){
-                            res.send("User already added");
-                        }
                         else{
                         res.send("New survey action added successfully");
                         }
@@ -511,18 +488,13 @@ app.post('/updateresponse' ,(req, res, next) => {
     var ans_3=(req.body.ans_3);
     var points_3=(req.body.points_3);
 
-    console.log(survey_id);
-    console.log(emp_id);
-    console.log(qno_1);
-    console.log(attempt_1);
-    console.log(ans_1);
-    console.log( points_1);
-   
+
   var req = new sql.Request();
-  req.query("EXEC SP_UPDATERESPONSE @survey_id='"+survey_id+"', @emp_id='"+emp_id+"', @qno_1="+qno_1+", @attempt_1="+attempt_1+", @ans_1='"+ans_1+"', @points_1="+points_1+", @qno_2="+qno_2+", @attempt_2="+attempt_2+", @ans_2='"+ans_2+"',@points_2="+points_2+",@qno_3="+qno_3+",@attempt_3="+attempt_3+",@ans_3='"+ans_3+"',@points_3="+points_3+"", function (err, data) {
+  req.query("EXEC SP_UPDATERESPONSE '"+survey_id+"','"+emp_id+"',"+qno_1+","+attempt_1+",'"+ans_1+"',"+points_1+","+qno_2+","+attempt_2+",'"+ans_2+"',"+points_2+","+qno_3+","+attempt_3+",'"+ans_3+"',"+points_3+"", function (err, data) {
       
             if (err) {
-                console.log(err);
+
+                res.send(400+err);
             }
             else{
                
