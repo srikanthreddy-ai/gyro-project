@@ -70,16 +70,10 @@ var config = {
 
 
 var connection = new Connection(config); 
-var conn=sql.connect(config, function(err) {
-    try{
-    if (err) console.log(err);
+var conn=sql.connect(config, function(req,res,err) {
+    if (err) res.send(err);
     // ... error checks
     console.log(config.server);
-    }
-    catch(err){
-        throw Error(err);
-    }
-
 
 });
 
@@ -165,10 +159,10 @@ createRoutes(app, config);
 
 
 
-  var job=app.get("/getquestionforuser1/:emp_id", function(req, res,next) {
+  app.get("/getquestionforuser1/:emp_id", function(req, res,next) {
     let empid=req.params.emp_id ;
 	let key = req.params.emp_id +"_Query" ;
-    let userQuestions = '';
+    let queriesForUser ='';
     let cacheFound = false;
     var req = new sql.Request();
 
@@ -183,13 +177,17 @@ createRoutes(app, config);
                 if (reply)
                 {
                     cacheFound = true;
-                    userQuestions=reply;
+                    queriesForUser=reply;
                     res.send(reply);
                 }
                 else
                 {
                    
                     req.execute('SP_GETQUSTIONSFORUSER', function (err,data) {
+                        if(data.recordset.length==0){
+                            res.send("data not found");
+                        }
+
                             if (data != 'undefined' && data.recordset != 'undefined')	{
                                 for (var i = 0; i < data.recordset.length;  ) {
                                         var id=data.recordset[i].emp_id;
@@ -550,6 +548,41 @@ app.get('/stopsurvey' ,(req, res, next) => {
     }
 
 });
+
+app.get('/deletekey/:emp_id' ,(req, res, next) => {
+    let keys=req.params.emp_id+"_Query";
+    console.log(keys);
+    try{
+        clientRedis.del(keys, function(req,res,err) {
+            console.log("deleted successfully");
+        });
+        res.send(keys+" Deleted Successfully");
+    }
+    catch(err){
+        throw Error(err);
+    }
+
+});
+
+app.get('/deleteallkeys' ,(req, res, next) => {
+    try{
+        clientRedis.flushall((err, success) => {
+            if (err) {
+              throw new Error(err);
+            }
+            console.log(success); // will be true if successfull
+          });
+        res.send(" Deleted All Keys Successfully");
+    }
+    catch(err){
+        throw Error(err);
+    }
+
+});
+
+
+
+
 
 
 
