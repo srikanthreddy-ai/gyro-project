@@ -54,7 +54,7 @@ app.use(responseTime());
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: '13.234.235.89',
+    server: 'localhost',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -577,6 +577,8 @@ app.get('/deleteallkeys' ,(req, res, next) => {
     catch(err){
         throw Error(err);
     }
+
+
 
 });
 
