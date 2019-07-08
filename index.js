@@ -54,7 +54,7 @@ app.use(responseTime());
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'localhost',
+    server: '13.234.235.89',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -168,9 +168,6 @@ createRoutes(app, config);
 
     try
 	{
-        
-  req.query("EXEC SP_STARTSURVEY", function (req,res) {console.log("Survey started") });
-  req.query("EXEC SP_STOPSURVEY", function (req,res) {console.log("Survey Stoped");});
         if (clientRedis != null)
         {
             clientRedis.get(key, function(err, reply){
@@ -199,7 +196,7 @@ createRoutes(app, config);
                                                 empQuestions.push(data.recordset[i]);
                                                 i++;
                                             }
-                                        clientRedis.setex(id+"_Query",120,JSON.stringify(empQuestions));
+                                        clientRedis.setex(id+"_Query",3600,JSON.stringify(empQuestions));
                                         if (id === empid)
                                         {
 
@@ -228,9 +225,11 @@ createRoutes(app, config);
 });
 
 
-var j = schedule.scheduleJob('*/2 * * * *', function(){
+var j = schedule.scheduleJob('1 * * * *', function(){
     console.log('caching every two min');
     var req = new sql.Request();
+    req.query("EXEC SP_STARTSURVEY", function (req,res) {console.log("Survey started") });
+  req.query("EXEC SP_STOPSURVEY", function (req,res) {console.log("Survey Stoped");});
     try{
     req.execute('SP_GETQUSTIONSFORUSER', function (err,data) {
             if (data != 'undefined' && data.recordset != 'undefined')	{
@@ -245,7 +244,7 @@ var j = schedule.scheduleJob('*/2 * * * *', function(){
                                 i++;
                                 //console.log(id);
                             }
-                        clientRedis.setex(id+"_Query",120,JSON.stringify(empQuestions));
+                        clientRedis.setex(id+"_Query",3600,JSON.stringify(empQuestions));
                         
                        
                 }
