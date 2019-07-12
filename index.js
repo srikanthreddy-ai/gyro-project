@@ -54,7 +54,7 @@ app.use(responseTime());
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: '13.234.235.89',
+    server: 'localhost',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -72,6 +72,7 @@ var config = {
 var connection = new Connection(config); 
 var conn=sql.connect(config, function(req,res,err) {
     if (err) res.send(err);
+    console.log("data base not conected");
     // ... error checks
     console.log(config.server);
 
