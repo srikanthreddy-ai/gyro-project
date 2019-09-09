@@ -54,7 +54,7 @@ app.use(responseTime());
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: 'localhost',
+    server: '13.234.235.89',
     //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -72,7 +72,6 @@ var config = {
 var connection = new Connection(config); 
 var conn=sql.connect(config, function(req,res,err) {
     if (err) res.send(err);
-    console.log("data base not conected");
     // ... error checks
     console.log(config.server);
 
@@ -197,7 +196,8 @@ createRoutes(app, config);
                                                 empQuestions.push(data.recordset[i]);
                                                 i++;
                                             }
-                                        clientRedis.setex(id+"_Query",3600,JSON.stringify(empQuestions));
+                                            
+                                        clientRedis.setex(id+"_Query",86400,JSON.stringify(empQuestions));
                                         if (id === empid)
                                         {
 
@@ -226,8 +226,8 @@ createRoutes(app, config);
 });
 
 
-var j = schedule.scheduleJob('1 * * * *', function(){
-    console.log('caching every two min');
+var j = schedule.scheduleJob('0 0 0 * * *', function(){
+    console.log('caching every day at 12 AM');
     var req = new sql.Request();
     req.query("EXEC SP_STARTSURVEY", function (req,res) {console.log("Survey started") });
   req.query("EXEC SP_STOPSURVEY", function (req,res) {console.log("Survey Stoped");});
@@ -245,7 +245,8 @@ var j = schedule.scheduleJob('1 * * * *', function(){
                                 i++;
                                 //console.log(id);
                             }
-                        clientRedis.setex(id+"_Query",3600,JSON.stringify(empQuestions));
+                            
+                        clientRedis.setex(id+"_Query",86400,JSON.stringify(empQuestions));
                         
                        
                 }
@@ -474,6 +475,7 @@ app.post('/updateresponse' ,(req, res, next) => {
     var survey_id=(req.body.survey_id);
     var emp_id=(req.body.emp_id);
     var qno_1=(req.body.qno_1);
+    var rsp_date=req.body.rsp_date;
     var attempt_1=(req.body.attempt_1);
     var ans_1=(req.body.ans_1);
     var points_1=(req.body.points_1);
@@ -485,10 +487,11 @@ app.post('/updateresponse' ,(req, res, next) => {
     var attempt_3=(req.body.attempt_3);
     var ans_3=(req.body.ans_3);
     var points_3=(req.body.points_3);
-
+       
+    console.log(rsp_date);
 
   var req = new sql.Request();
-  req.query("EXEC SP_UPDATERESPONSE '"+survey_id+"','"+emp_id+"',"+qno_1+","+attempt_1+",'"+ans_1+"',"+points_1+","+qno_2+","+attempt_2+",'"+ans_2+"',"+points_2+","+qno_3+","+attempt_3+",'"+ans_3+"',"+points_3+"", function (err, data) {
+  req.query("EXEC SP_UPDATERESPONSE1 '"+survey_id+"','"+rsp_date+"','"+emp_id+"',"+qno_1+","+attempt_1+",'"+ans_1+"',"+points_1+","+qno_2+","+attempt_2+",'"+ans_2+"',"+points_2+","+qno_3+","+attempt_3+",'"+ans_3+"',"+points_3+"", function (err, data) {
       
             if (err) {
 
@@ -496,7 +499,7 @@ app.post('/updateresponse' ,(req, res, next) => {
             }
             else{
                
-                res.send("User Response added successfully");
+                res.send("User Response added successfully"+rsp_date);
                 
             }
       });
