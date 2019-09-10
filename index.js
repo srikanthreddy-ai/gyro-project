@@ -54,8 +54,8 @@ app.use(responseTime());
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    server: '13.234.235.89',
-    //server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
+    //server: '13.234.235.89',
+    server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
     port:1433,
@@ -499,7 +499,7 @@ app.post('/updateresponse' ,(req, res, next) => {
             }
             else{
                
-                res.send("User Response added successfully"+rsp_date);
+                res.send("User Response added successfully");
                 
             }
       });
