@@ -25,6 +25,9 @@ var lowerCase = require('lower-case');
 var ignoreCase = require('ignore-case');
 var ci = require('case-insensitive');
 var userinfo=require('./router/userinfo');
+// var log=require('./debug.log');
+var fs=require('fs');
+const SimpleNodeLogger = require('simple-node-logger');
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
@@ -87,6 +90,7 @@ createRoutes(app, config);
                     var req = new sql.Request();
                     req.execute('SP_GETUSERINFO', function (err,data) {
                         if (err) console.log(err);
+                        // log = createSimpleLogger( "Error :" );
                         for (var i = 0; i < data.recordset.length;  ) {
                             lowerCase(data);
                             var a=data.recordset[i].logon_name;
@@ -102,6 +106,9 @@ createRoutes(app, config);
                             if (id == key)
                             {
                                 empdetails = JSON.stringify(emp);
+                            }
+                            if(empdetails.length==0){
+                                empdetails="No user exist";
                             }
                 
                         }
@@ -271,38 +278,37 @@ app.get('/', function (req, res,err) {
   app.get("/pictures/:survey_id",  function(req, res) {
     let key=req.params.survey_id;
     let picture="";
-    clientRedis.get("picture"+key, function(err, reply)
-    {
-      if(reply){
-          picture = reply;
-      }
-      else {
-
+   
+    try{
       var req = new sql.Request();
-      req.query('[dbo].[SP_GETSURVEYIMAGE]', function (err,data) {
-          if (err) console.log(err);
-            
-          for (var i = 0; i < data.recordset.length;  ) {
+            req.query('[dbo].[SP_GETSURVEYIMAGE]', function (err,data) {
+                if (err) console.log(err);
+                    
+                                for (var i = 0; i < data.recordset.length;  ) {
 
-              var id=data.recordset[i].survey_id;
-              var pictures=[];
-              var checkLoop = true;
-              var loopCounter=0;
-              while(i < data.recordset.length && id == data.recordset[i].survey_id) {
-                  pictures.push(data.recordset[i]);
-                  i++;
-              }
-
-              clientRedis.set("picture"+id, JSON.stringify(pictures));
-            if (id == key)
-            {
-                picture = JSON.stringify(pictures);
+                                    var id=data.recordset[i].survey_id;
+                                    var pictures=[];
+                                    var checkLoop = true;
+                                    var loopCounter=0;
+                                    while(i < data.recordset.length && id == data.recordset[i].survey_id) {
+                                        pictures.push(data.recordset[i]);
+                                        i++;
+                                    }
+                                            if (id == key)
+                                            {
+                                                picture = JSON.stringify(pictures);
+                                            }
+                                            if(picture.length==0){
+                                                picture="Picture not found";
+                                            }
+                                }
+                                
+                        res.send(picture);
+                });
             }
-          }
-         });
-        }
-       res.send(picture);
-    });
+            catch(err){
+                throw Error(err);
+            }
   });
 
 
@@ -310,39 +316,46 @@ app.get('/', function (req, res,err) {
     let key=req.params.survey_id;
     let surveypicture="";
     console.log(key);
-    clientRedis.get("surveypicture"+key, function(err, reply)
-    {
-      if(reply){
-          surveypicture = reply;
-      }
-      else {
-      var req = new sql.Request();
-      req.query('[dbo].[SP_GETSURVEYQUESTIONSIMAGE]', function (err,data) {
-          if (err) console.log(err);
-          for (var i = 0; i < data.recordset.length;  ) {
-              var id=data.recordset[i].survey_id;
-              var surveyimage=[];
-              var checkLoop = true;
-              var loopCounter=0;
-              while(i < data.recordset.length && id == data.recordset[i].survey_id) {
-                  if (id==key)
-                  {
-                      //console.log("test");
-                  }
-                  surveyimage.push(data.recordset[i]);
-                  i++;
-              }
 
-              clientRedis.set("surveypicture"+id, JSON.stringify(surveyimage));
-            if (id == key)
-            {
-                surveypicture = JSON.stringify(surveyimage);
-            }
-          }
+    try{
+                var req = new sql.Request();
+                req.query('[dbo].[SP_GETSURVEYQUESTIONSIMAGE]', function (err,data) {
+                    if (err) console.log(err);
+                    for (var i = 0; i < data.recordset.length;  ) {
+                        var id=data.recordset[i].survey_id;
+                        var surveyimage=[];
+                        var checkLoop = true;
+                        var loopCounter=0;
+                        while(i < data.recordset.length && id == data.recordset[i].survey_id) {
+                            // if (id==key)
+                            // {
+                            //     //console.log("test");
+                            // }
+                            surveyimage.push(data.recordset[i]);
+                            i++;
+                        }
+                        if(surveyimage.length==0){
+                            surveyimage="survey question images not found";
+                        }
+
+                       
+                        if (id == key)
+                        {
+                            surveypicture = JSON.stringify(surveyimage);
+                        }
+                        if(surveypicture.length==0){
+                            surveypicture="picture not found";
+                        }
+                    }
+                    res.send(surveypicture);
          });
         }
-       res.send(surveypicture);
-    });
+        catch(err){
+            throw Error(err);
+        }
+        
+      
+    
   });
 
  
