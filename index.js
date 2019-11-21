@@ -24,10 +24,11 @@ var schedule = require('node-schedule');
 var lowerCase = require('lower-case');
 var ignoreCase = require('ignore-case');
 var ci = require('case-insensitive');
-var userinfo=require('./router/userinfo');
+// var userinfo=require('./router/userinfo');
 // var log=require('./debug.log');
 var fs=require('fs');
 const SimpleNodeLogger = require('simple-node-logger');
+var index = require('./router/index');
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
@@ -82,6 +83,8 @@ var conn=sql.connect(config, function(req,res,err) {
 
 createRoutes(app, config);
 
+
+app.use(app, index);
 
   app.get("/userinfo/:empname", function(req, res, next) {
     let key =lowerCase(req.params.empname);

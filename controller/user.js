@@ -1,14 +1,16 @@
-var express=require('express');
+var config=require('../index.js');
+var express = require('express');
 var router = express.Router();
-var app=express();
+const sql = require('mssql-plus');
 
-app.get("/userinfo/:empname", function(req, res, next) {
+exports.getuserinfo=function(req, res, next) {
     let key =lowerCase(req.params.empname);
     let empdetails="";
        try{
                     var req = new sql.Request();
                     req.execute('SP_GETUSERINFO', function (err,data) {
                         if (err) console.log(err);
+                        // log = createSimpleLogger( "Error :" );
                         for (var i = 0; i < data.recordset.length;  ) {
                             lowerCase(data);
                             var a=data.recordset[i].logon_name;
@@ -25,6 +27,9 @@ app.get("/userinfo/:empname", function(req, res, next) {
                             {
                                 empdetails = JSON.stringify(emp);
                             }
+                            if(empdetails.length==0){
+                                empdetails="No user exist";
+                            }
                 
                         }
                         res.send(empdetails);
@@ -34,6 +39,4 @@ app.get("/userinfo/:empname", function(req, res, next) {
                 catch(err){
                     throw Error(err);
                 }
-  });
-
-  module.exports=app;
+  };
