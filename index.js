@@ -57,7 +57,7 @@ app.use(responseTime());
 var config = {
     user: 'SAEEsa',
     password: 'gyrit@123',
-    // server: '13.234.235.89',
+    //server: '13.234.235.89',
     server: 'CORPSSPS01\\SQLEXPRESS', // You can use 'localhost\\instance' to connect to named instance 
     database: 'SAEEdb',
     stream: true,
@@ -107,7 +107,7 @@ createRoutes(app, config);
                             {
                                 empdetails = JSON.stringify(emp);
                             }
-                            if(empdetails.length==0){
+                            else{
                                 empdetails="No user exist";
                             }
                 
@@ -188,10 +188,8 @@ createRoutes(app, config);
                 {
                    
                     req.execute('SP_GETQUSTIONSFORUSER', function (err,data) {
-                        if(data.recordset.length==0){
-                            res.send("data not found");
-                        }
-
+                       
+                    try{
                             if (data != 'undefined' && data.recordset != 'undefined')	{
                                 for (var i = 0; i < data.recordset.length;  ) {
                                         var id=data.recordset[i].emp_id;
@@ -211,7 +209,7 @@ createRoutes(app, config);
                                             queriesForUser = JSON.stringify(empQuestions);
                                         }
                                         else{
-                                            queriesForUser="USER NOT AVAILABLE FOR THE TEST";
+                                            queriesForUser="DATA NOT AVAILABLE FOR THE TEST";
                                         }
                                 }
                                 if(queriesForUser)
@@ -219,8 +217,12 @@ createRoutes(app, config);
                                     res.send(queriesForUser);
                                 }
                             }
-                        });
-                    }
+                        }
+                        catch(err){
+                            res.send("Err");
+                        }
+                    });
+                }
             });
 
            
