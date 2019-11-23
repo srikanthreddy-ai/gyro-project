@@ -107,9 +107,7 @@ createRoutes(app, config);
                             {
                                 empdetails = JSON.stringify(emp);
                             }
-                            else{
-                                empdetails="No user exist";
-                            }
+                           
                 
                         }
                         res.send(empdetails);
@@ -188,8 +186,8 @@ createRoutes(app, config);
                 {
                    
                     req.execute('SP_GETQUSTIONSFORUSER', function (err,data) {
+                        if (err) console.log(err);
                        
-                    try{
                             if (data != 'undefined' && data.recordset != 'undefined')	{
                                 for (var i = 0; i < data.recordset.length;  ) {
                                         var id=data.recordset[i].emp_id;
@@ -216,11 +214,8 @@ createRoutes(app, config);
                                 {
                                     res.send(queriesForUser);
                                 }
-                            }
-                        }
-                        catch(err){
-                            res.send("Err");
-                        }
+                            }                   
+                       
                     });
                 }
             });
