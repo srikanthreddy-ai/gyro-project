@@ -28,7 +28,7 @@
     "node-schedule": "^1.3.2",
     "nodemon": "^1.19.0",
     "normalize-port": "~1.0.0",
-    "npm": "~6.9.0",
+    "npm": "~6.14.6",
     "redis": "~2.8.0",
     "redis-server": "~1.2.2",
     "response-time": "~2.3.2",
